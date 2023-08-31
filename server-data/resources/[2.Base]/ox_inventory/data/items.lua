@@ -113,6 +113,10 @@ return {
 		consume = 0
 	},
 
+	['identification'] = {
+		label = 'Identification',
+	},
+
 	['panties'] = {
 		label = 'Knickers',
 		weight = 10,
@@ -186,6 +190,21 @@ return {
 		allowArmed = true
 	},
 
+	['armour'] = {
+		label = 'Bulletproof Vest',
+		weight = 3000,
+		stack = false,
+		client = {
+			anim = { dict = 'clothingshirt', clip = 'try_shirt_positive_d' },
+			usetime = 3500
+		}
+	},
+
+	['clothing'] = {
+		label = 'Clothing',
+		consume = 0,
+	},
+
 	['mastercard'] = {
 		label = 'Mastercard',
 		stack = false,
@@ -196,19 +215,4 @@ return {
 		label = 'Scrap Metal',
 		weight = 80,
 	},
-
-	['handcuffs'] = {
-		label = 'Handcuffs',
-		weight = 100,
-		stack = false,
-		allowArmed = true
-	},
-	
-	['rope'] = {
-	label = 'Rope',
-	weight = 100,
-	stack = false,
-	allowArmed = true
-	},
-
 }
