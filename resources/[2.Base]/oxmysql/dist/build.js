@@ -24767,6 +24767,11 @@ RegisterCommand(
   true
 );
 
+// src/utils/sleep.ts
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // src/database/connection.ts
 var import_promise = __toESM(require_promise());
 
@@ -24781,15 +24786,8 @@ var pool;
 var isServerConnected = false;
 var dbVersion = "";
 async function waitForConnection() {
-  if (!isServerConnected) {
-    return await new Promise((resolve) => {
-      (function wait() {
-        if (isServerConnected) {
-          return resolve(true);
-        }
-        setTimeout(wait);
-      })();
-    });
+  while (!isServerConnected) {
+    await sleep(0);
   }
 }
 async function createConnectionPool() {
@@ -24813,11 +24811,8 @@ async function createConnectionPool() {
   }
 }
 async function getPoolConnection() {
-  if (!pool) {
-    await createConnectionPool();
-    if (!pool)
-      return;
-  }
+  if (!isServerConnected)
+    await waitForConnection();
   scheduleTick();
   return pool.getConnection();
 }
@@ -25285,9 +25280,13 @@ ${err.message}`;
 };
 
 // src/database/index.ts
-setTimeout(() => {
+setTimeout(async () => {
   setDebug();
-  getPoolConnection();
+  while (!isServerConnected) {
+    await createConnectionPool();
+    if (!isServerConnected)
+      await sleep(3e4);
+  }
 });
 setInterval(() => {
   setDebug();
