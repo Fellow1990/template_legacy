@@ -75,10 +75,10 @@ function OxInventory:syncSlotsWithClients(slots, syncOwner)
 	end
 end
 
-local Vehicles = data 'vehicles'
+local Vehicles = lib.load('data.vehicles')
 local RegisteredStashes = {}
 
-for _, stash in pairs(data 'stashes') do
+for _, stash in pairs(lib.load('data.stashes')) do
 	RegisteredStashes[stash.name] = {
 		name = stash.name,
 		label = stash.label,
@@ -1640,7 +1640,10 @@ lib.callback.register('ox_inventory:swapItems', function(source, data)
             return dropItem(source, playerInventory, fromData, data)
         end
 
-		if fromData and (not fromData.metadata.container or fromData.metadata.container and toInventory.type ~= 'container') then
+		if fromData then
+            if fromData.metadata.container and toInventory.type == 'container' then return false end
+            if toData and toData.metadata.container and fromInventory.type == 'container' then return false end
+
 			local container, containerItem = (not sameInventory and playerInventory.containerSlot) and (fromInventory.type == 'container' and fromInventory or toInventory)
 
 			if container then
@@ -2306,6 +2309,8 @@ function Inventory.SaveInventories(lock, clearInventories)
 end
 
 AddEventHandler('playerDropped', function()
+	server.playerDropped(source)
+
 	if GetNumPlayerIndices() == 0 then
 		Inventory.SaveInventories(false, true)
 	end
@@ -2642,5 +2647,15 @@ function Inventory.CreateTemporaryStash(properties)
 end
 
 exports('CreateTemporaryStash', Inventory.CreateTemporaryStash)
+
+function Inventory.InspectInventory(playerId, invId)
+	local inventory = invId ~= playerId and Inventory(invId)
+	local playerInventory = Inventory(playerId)
+
+	if playerInventory and inventory then
+		playerInventory:openInventory(inventory)
+		TriggerClientEvent('ox_inventory:viewInventory', playerId, inventory)
+	end
+end
 
 return Inventory
