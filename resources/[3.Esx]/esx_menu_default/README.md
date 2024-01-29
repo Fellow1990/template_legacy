@@ -1,10 +1,18 @@
-FiveM ESX Menu Default V2 by Nightt#8899
+<h1 align='center'>[ESX] Menu Defualt</a></h1><p align='center'><b><a href='https://discord.esx-framework.org/'>Discord</a> - <a href='https://esx-framework.org/'>Website</a> - <a href='https://documentation.esx-framework.org/legacy/installation'>Documentation</a></b></h5>
 
-- | Discord: https://discord.gg/Suh7hfwwXV
-- | Preview:
+A defualt List type menu for ESX.
 
-![image](https://user-images.githubusercontent.com/101990128/159356815-c2dd7faa-546a-49fa-8a2c-0f5915bd5eaa.png)
+![Preview_1](https://cdn.discordapp.com/attachments/944789399852417096/997882867336101948/Screenshot_52.png)
+![Preview_2](https://cdn.discordapp.com/attachments/944789399852417096/997882867688411176/Screenshot_53.png)
 
+## Legal
 
-- Espero que os guste, disfrutadlo :)
-- I hope you like it, enjoy it :)
+esx_menu_defualt - Default Menu!
+
+Copyright (C) 2015-2023 Jérémie N'gadi
+
+This program Is free software: you can redistribute it And/Or modify it under the terms Of the GNU General Public License As published by the Free Software Foundation, either version 3 Of the License, Or (at your option) any later version.
+
+This program Is distributed In the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty Of MERCHANTABILITY Or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License For more details.
+
+You should have received a copy Of the GNU General Public License along with this program. If Not, see <http://www.gnu.org/licenses/>.

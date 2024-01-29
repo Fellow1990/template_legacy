@@ -1,24 +1,14 @@
 fx_version 'adamant'
 
 game 'gta5'
+description 'ESX Menu Default'
+lua54 'yes'
+version '1.10.3'
 
-author 'Nightt#8899'
+client_scripts { '@es_extended/imports.lua', 'client/main.lua' }
 
-description 'ESX Menu Default by Nightt#8899'
+ui_page { 'html/ui.html' }
 
-client_scripts {
-	'@es_extended/imports.lua',
-	'client/main.lua'
-}
+files { 'html/ui.html', 'html/css/app.css', 'html/js/mustache.min.js', 'html/js/app.js' }
 
-ui_page {
-	'html/ui.html'
-}
-
-files {
-	files {"**/**/**/**/**/**/**/*.*"}
-}
-
-dependencies {
-	'es_extended'
-}
+dependencies { 'es_extended' }
