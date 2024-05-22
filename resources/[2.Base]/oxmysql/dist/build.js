@@ -18503,10 +18503,10 @@ var require_pool_connection = __commonJS({
       }
     };
     __name(_PoolConnection, "PoolConnection");
-    var PoolConnection = _PoolConnection;
-    PoolConnection.statementKey = Connection.statementKey;
-    module2.exports = PoolConnection;
-    PoolConnection.prototype._realEnd = Connection.prototype.end;
+    var PoolConnection2 = _PoolConnection;
+    PoolConnection2.statementKey = Connection.statementKey;
+    module2.exports = PoolConnection2;
+    PoolConnection2.prototype._realEnd = Connection.prototype.end;
   }
 });
 
@@ -18517,7 +18517,7 @@ var require_pool = __commonJS({
     var process2 = require("process");
     var mysql = require_mysql2();
     var EventEmitter = require("events").EventEmitter;
-    var PoolConnection = require_pool_connection();
+    var PoolConnection2 = require_pool_connection();
     var Queue = require_denque();
     var Connection = require_connection();
     function spliceConnection(queue, connection) {
@@ -18558,7 +18558,7 @@ var require_pool = __commonJS({
           return process2.nextTick(() => cb(null, connection));
         }
         if (this.config.connectionLimit === 0 || this._allConnections.length < this.config.connectionLimit) {
-          connection = new PoolConnection(this, {
+          connection = new PoolConnection2(this, {
             config: this.config.connectionConfig
           });
           this._allConnections.push(connection);
@@ -25955,9 +25955,9 @@ var init_update = __esm({
       if (GetConvarInt("mysql_versioncheck", 1) === 0)
         return;
       const resourceName2 = GetCurrentResourceName();
-      const currentVersion = (_a4 = GetResourceMetadata(resourceName2, "version", 0)) == null ? void 0 : _a4.match(/(\d)\.(\d)\.(\d)/);
+      const currentVersion = (_a4 = GetResourceMetadata(resourceName2, "version", 0)) == null ? void 0 : _a4.match(/(\d+)\.(\d+)\.(\d+)/);
       if (!currentVersion)
-        return console.log(`^1Unable to determine current resource version for '${resourceName2}'^0`);
+        return;
       setTimeout(async () => {
         const response = await fetch(`https://api.github.com/repos/overextended/oxmysql/releases/latest`);
         if (response.status !== 200)
@@ -25965,7 +25965,7 @@ var init_update = __esm({
         const release = await response.json();
         if (release.prerelease)
           return;
-        const latestVersion = release.tag_name.match(/(\d)\.(\d)\.(\d)/);
+        const latestVersion = release.tag_name.match(/(\d+)\.(\d+)\.(\d+)/);
         if (!latestVersion || latestVersion[0] === currentVersion[0])
           return;
         for (let i2 = 1; i2 < currentVersion.length; i2++) {
@@ -26162,11 +26162,20 @@ async function waitForConnection() {
   }
 }
 __name(waitForConnection, "waitForConnection");
+var activeConnections = {};
 async function createConnectionPool() {
   try {
     pool = (0, import_promise.createPool)(connectionOptions);
     pool.on("connection", (connection2) => {
       connection2.query(mysql_transaction_isolation_level);
+    });
+    pool.on("acquire", (conn) => {
+      const connectionId = conn.connectionId;
+      activeConnections[connectionId] = conn;
+    });
+    pool.on("release", (conn) => {
+      const connectionId = conn.connectionId;
+      delete activeConnections[connectionId];
     });
     const connection = await pool.getConnection();
     const [result] = await connection.query("SELECT VERSION() as version");
@@ -26176,18 +26185,20 @@ async function createConnectionPool() {
     isServerConnected = true;
   } catch (err) {
     isServerConnected = false;
+    const message = err.message.includes("auth_gssapi_client") ? `Server requests authentication using unknown plugin auth_gssapi_client.
+See https://github.com/overextended/oxmysql/issues/213.` : err.message;
     console.log(
       `^3Unable to establish a connection to the database (${err.code})!
-^1Error ${err.errno}: ${err.message}^0`
+^1Error${err.errno ? ` ${err.errno}` : ""}: ${message}^0`
     );
   }
 }
 __name(createConnectionPool, "createConnectionPool");
-async function getPoolConnection() {
+async function getPoolConnection(id) {
   if (!isServerConnected)
     await waitForConnection();
   scheduleTick();
-  return pool.getConnection();
+  return id ? activeConnections[id] : pool.getConnection();
 }
 __name(getPoolConnection, "getPoolConnection");
 
@@ -26256,21 +26267,22 @@ var parseResponse = /* @__PURE__ */ __name((type, result) => {
 }, "parseResponse");
 
 // src/logger/index.ts
-function logError(invokingResource, cb, isPromise, err, query, parameters, includeParameters) {
-  const message = `${invokingResource} was unable to execute a query!${query ? `
+function logError(invokingResource, cb, isPromise, err = "", query, parameters, includeParameters) {
+  const message = typeof err === "object" ? err.message : err.replace(/SCRIPT ERROR: citizen:[\w\/\.]+:\d+[:\s]+/, "");
+  const output = `${invokingResource} was unable to execute a query!${query ? `
 ${`Query: ${query}`}` : ""}${includeParameters ? `
 ${JSON.stringify(parameters)}` : ""}
-${err.message}`;
+${message}`;
   TriggerEvent("oxmysql:error", {
     query,
     parameters,
-    message: err.message,
+    message,
     err,
     resource: invokingResource
   });
   if (cb && isPromise)
-    return cb(null, message);
-  console.error(message);
+    return cb(null, output);
+  console.error(output);
 }
 __name(logError, "logError");
 var profilerStatements = [
@@ -26383,11 +26395,13 @@ onNet(
   (data) => {
     if (typeof data.resource !== "string" || !IsPlayerAceAllowed(source, "command.mysql"))
       return;
-    const resourceLog = logStorage[data.resource];
+    if (data.search)
+      data.search = data.search.toLowerCase();
+    const resourceLog = data.search ? logStorage[data.resource].filter((q) => q.query.toLowerCase().includes(data.search)) : logStorage[data.resource];
     const sort = data.sortBy && data.sortBy.length > 0 ? data.sortBy[0] : false;
     const startRow = data.pageIndex * 10;
     const endRow = startRow + 10;
-    const queries = sort ? sortQueries(logStorage[data.resource], sort).slice(startRow, endRow) : logStorage[data.resource].slice(startRow, endRow);
+    const queries = sort ? sortQueries(resourceLog, sort).slice(startRow, endRow) : resourceLog.slice(startRow, endRow);
     const pageCount = Math.ceil(resourceLog.length / 10);
     if (!queries)
       return;
@@ -26412,14 +26426,27 @@ onNet(
 
 // src/database/rawQuery.ts
 var import_perf_hooks = require("perf_hooks");
-var rawQuery = /* @__PURE__ */ __name(async (type, invokingResource, query, parameters, cb, isPromise) => {
+
+// src/utils/validateResultSet.ts
+var oversizedResultSet = GetConvarInt("mysql_resultset_warning", 1e3);
+function validateResultSet_default(invokingResource, query, rows) {
+  const length = Array.isArray(rows) ? rows.length : 0;
+  if (length < oversizedResultSet)
+    return;
+  console.warn(`${invokingResource} executed a query with an oversized result set (${length} results)!
+${query}`);
+}
+__name(validateResultSet_default, "default");
+
+// src/database/rawQuery.ts
+var rawQuery = /* @__PURE__ */ __name(async (type, invokingResource, query, parameters, cb, isPromise, connectionId) => {
   cb = setCallback(parameters, cb);
   try {
     [query, parameters] = parseArguments(query, parameters);
   } catch (err) {
-    return logError(invokingResource, cb, err, isPromise, query, parameters);
+    return logError(invokingResource, cb, isPromise, err, query, parameters);
   }
-  const connection = await getPoolConnection();
+  const connection = await getPoolConnection(connectionId);
   if (!connection)
     return;
   try {
@@ -26433,16 +26460,18 @@ var rawQuery = /* @__PURE__ */ __name(async (type, invokingResource, query, para
     } else if (startTime) {
       logQuery(invokingResource, query, import_perf_hooks.performance.now() - startTime, parameters);
     }
-    if (cb)
-      try {
-        cb(parseResponse(type, result));
-      } catch (err) {
-        if (typeof err === "string") {
-          if (err.includes("SCRIPT ERROR:"))
-            return console.log(err);
-          console.log(`^1SCRIPT ERROR in invoking resource ${invokingResource}: ${err}^0`);
-        }
+    validateResultSet_default(invokingResource, query, result);
+    if (!cb)
+      return parseResponse(type, result);
+    try {
+      cb(parseResponse(type, result));
+    } catch (err) {
+      if (typeof err === "string") {
+        if (err.includes("SCRIPT ERROR:"))
+          return console.log(err);
+        console.log(`^1SCRIPT ERROR in invoking resource ${invokingResource}: ${err}^0`);
       }
+    }
   } catch (err) {
     logError(invokingResource, cb, isPromise, err, query, parameters, true);
   } finally {
@@ -26502,7 +26531,7 @@ var parseExecute = /* @__PURE__ */ __name((placeholders, parameters) => {
 
 // src/database/rawExecute.ts
 var import_perf_hooks2 = require("perf_hooks");
-var rawExecute = /* @__PURE__ */ __name(async (invokingResource, query, parameters, cb, isPromise, unpack) => {
+var rawExecute = /* @__PURE__ */ __name(async (invokingResource, query, parameters, cb, isPromise, unpack, connectionId) => {
   cb = setCallback(parameters, cb);
   let type;
   let placeholders;
@@ -26513,7 +26542,7 @@ var rawExecute = /* @__PURE__ */ __name(async (invokingResource, query, paramete
   } catch (err) {
     return logError(invokingResource, cb, isPromise, err, query, parameters);
   }
-  const connection = await getPoolConnection();
+  const connection = await getPoolConnection(connectionId);
   if (!connection)
     return;
   try {
@@ -26529,22 +26558,21 @@ var rawExecute = /* @__PURE__ */ __name(async (invokingResource, query, paramete
       }
       const startTime = !hasProfiler && import_perf_hooks2.performance.now();
       const [result] = await connection.execute(query, values);
-      if (cb) {
-        if (Array.isArray(result) && result.length > 1) {
-          for (const value of result) {
-            response.push(unpack ? parseResponse(type, value) : value);
-          }
-        } else
-          response.push(unpack ? parseResponse(type, result) : result);
-      }
+      if (Array.isArray(result) && result.length > 1) {
+        for (const value of result) {
+          response.push(unpack ? parseResponse(type, value) : value);
+        }
+      } else
+        response.push(unpack ? parseResponse(type, result) : result);
       if (hasProfiler && (index > 0 && index % 100 === 0 || index === parametersLength - 1)) {
         await profileBatchStatements(connection, invokingResource, query, parameters, index < 100 ? 0 : index);
       } else if (startTime) {
         logQuery(invokingResource, query, import_perf_hooks2.performance.now() - startTime, values);
       }
+      validateResultSet_default(invokingResource, query, result);
     }
     if (!cb)
-      return;
+      return response.length === 1 ? response[0] : response;
     try {
       if (response.length === 1) {
         if (unpack && type === null) {
@@ -26695,6 +26723,46 @@ var mysql_async_default = {
   store: "mysql_store"
 };
 
+// src/database/startTransaction.ts
+async function runQuery(conn, sql, values) {
+  [sql, values] = parseArguments(sql, values);
+  try {
+    if (!conn)
+      throw new Error(`Connection used by transaction timed out after 30 seconds.`);
+    const [rows] = await conn.query(sql, values);
+    return rows;
+  } catch (err) {
+    throw new Error(`Query: ${sql}
+${JSON.stringify(values)}
+${err.message}`);
+  }
+}
+__name(runQuery, "runQuery");
+var startTransaction = /* @__PURE__ */ __name(async (invokingResource, queries, cb, isPromise) => {
+  let conn = await getPoolConnection();
+  let response = false;
+  if (!conn)
+    return;
+  setTimeout(() => response = null, 3e4);
+  try {
+    await conn.beginTransaction();
+    const commit = await queries(
+      (sql, values) => runQuery(response === null ? null : conn, sql, values)
+    );
+    if (response === null)
+      throw new Error(`Transaction has timed out after 30 seconds.`);
+    response = commit === false ? false : true;
+    response ? conn.commit() : conn.rollback();
+  } catch (err) {
+    conn.rollback();
+    logError(invokingResource, cb, isPromise, err);
+  } finally {
+    conn.release();
+    conn = null;
+  }
+  return cb ? cb(response) : response;
+}, "startTransaction");
+
 // src/index.ts
 Promise.resolve().then(() => init_update());
 var MySQL = {};
@@ -26723,6 +26791,12 @@ MySQL.insert = (query, parameters, cb, invokingResource = GetInvokingResource(),
 MySQL.transaction = (queries, parameters, cb, invokingResource = GetInvokingResource(), isPromise) => {
   rawTransaction(invokingResource, queries, parameters, cb, isPromise);
 };
+global.exports(
+  "experimentalTransaction",
+  async (transactions, cb, invokingResource = GetInvokingResource(), isPromise) => {
+    return await startTransaction(invokingResource, transactions, cb, isPromise);
+  }
+);
 MySQL.prepare = (query, parameters, cb, invokingResource = GetInvokingResource(), isPromise) => {
   rawExecute(invokingResource, query, parameters, cb, isPromise, true);
 };

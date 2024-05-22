@@ -301,7 +301,9 @@ function Inventory.Set(inv, k, v)
 	inv = Inventory(inv) --[[@as OxInventory]]
 
 	if inv then
-		if type(v) == 'number' then math.floor(v + 0.5) end
+		if type(v) == 'number' then
+			v = math.floor(v + 0.5)
+		end
 
 		if k == 'open' and v == false then
 			if inv.type ~= 'player' then
@@ -701,34 +703,58 @@ function Inventory.Save(inv)
     return db.saveStash(inv.owner, inv.dbId, data)
 end
 
+---@alias RandomLoot { [1]: string, [2]: number, [3]: number, [4]?: number }
+
+---@param loot RandomLoot[]
+---@param items RandomLoot[]
+---@param size number
+---@return RandomLoot
 local function randomItem(loot, items, size)
-	local item = loot[math.random(1, size)]
-	for i = 1, #items do
-		if items[i][1] == item[1] then
-			return randomItem(loot, items, size)
-		end
-	end
-	return item
+    local itemIndex = math.random(1, size)
+    local selectedItem = nil
+
+    for _ = 1, size do
+        selectedItem = loot[itemIndex]
+        local found = false
+
+        for i = 1, #items do
+            if items[i][1] == selectedItem[1] then
+                found = true
+                break
+            end
+        end
+
+        if not found then break end
+
+        itemIndex = ((itemIndex - 1) % size) + 1
+    end
+
+    return selectedItem
 end
 
+---@param loot RandomLoot[]
+---@return RandomLoot[]
 local function randomLoot(loot)
-	local items = {}
+    ---@type RandomLoot[]
+    local items = {}
+    local size = #loot
+    local itemCount = math.random(0, 3)
 
-	if loot then
-		local size = #loot
-		for i = 1, math.random(0, 3) do
-			if i > size then return items end
-			local item = randomItem(loot, items, size)
-			if math.random(1, 100) <= (item[4] or 80) then
-				local count = math.random(item[2], item[3])
-				if count > 0 then
-					items[#items+1] = {item[1], count}
-				end
-			end
-		end
-	end
+    for _ = 1, itemCount do
+        if #items >= size then break end
 
-	return items
+        local item = randomItem(loot, items, size)
+
+        if item and math.random(1, 100) <= (item[4] or 80) then
+            local count = math.random(item[2], item[3])
+
+            if count > 0 then
+                items[#items + 1] = { item[1], count }
+            end
+        end
+    end
+
+    return items
 end
 
 ---@param inv inventory
@@ -1223,8 +1249,10 @@ exports('Search', Inventory.Search)
 ---@param item table | string
 ---@param metadata? table
 function Inventory.GetItemSlots(inv, item, metadata)
-	inv = Inventory(inv) --[[@as OxInventory]]
+	if type(item) ~= 'table' then item = Items(item) end
+	if not item then return end
 
+	inv = Inventory(inv) --[[@as OxInventory]]
 	if not inv?.slots then return end
 
 	local totalCount, slots, emptySlots = 0, {}, inv.slots
@@ -1364,7 +1392,6 @@ function Inventory.CanCarryItem(inv, item, count, metadata)
 				local newWeight = inv.weight + (weight * count)
 
 				if newWeight > inv.maxWeight then
-					TriggerClientEvent('ox_lib:notify', inv.id, { type = 'error', description = locale('cannot_carry') })
 					return false
 				end
 
@@ -1448,7 +1475,7 @@ end
 
 local function CustomDrop(prefix, items, coords, slots, maxWeight, instance, model)
 	local dropId = generateInvId()
-	local inventory = Inventory.Create(dropId, ('%s %s'):format(prefix, dropId:gsub('%D', '')), 'drop', slots or shared.playerslots, 0, maxWeight or shared.playerweight, false, {})
+	local inventory = Inventory.Create(dropId, ('%s %s'):format(prefix, dropId:gsub('%D', '')), 'drop', slots or shared.dropslots, 0, maxWeight or shared.dropweight, false, {})
 
 	if not inventory then return end
 
@@ -1546,7 +1573,7 @@ local function dropItem(source, playerInventory, fromData, data)
 	end
 
 	local dropId = generateInvId('drop')
-	local inventory = Inventory.Create(dropId, ('Drop %s'):format(dropId:gsub('%D', '')), 'drop', shared.playerslots, toData.weight, shared.playerweight, false, {[data.toSlot] = toData})
+	local inventory = Inventory.Create(dropId, ('Drop %s'):format(dropId:gsub('%D', '')), 'drop', shared.dropslots, toData.weight, shared.dropweight, false, {[data.toSlot] = toData})
 
 	if not inventory then return end
 
@@ -2268,7 +2295,6 @@ local inventoryClearTime = GetConvarInt('inventory:cleartime', 5) * 60
 local function saveInventories(clearInventories)
 	if isSaving then return end
 
-	isSaving = true
 	local time = os.time()
 	local parameters = { {}, {}, {}, {} }
 	local total = { 0, 0, 0, 0, 0 }
@@ -2293,10 +2319,12 @@ local function saveInventories(clearInventories)
 	end
 
     if total[5] > 0 then
-	    db.saveInventories(parameters[1], parameters[2], parameters[3], parameters[4], total)
-    end
+        isSaving = true
+        local ok, err = pcall(db.saveInventories, parameters[1], parameters[2], parameters[3], parameters[4], total)
+        isSaving = false
 
-	isSaving = false
+        if not ok and err then return lib.print.error(err) end
+    end
 
     if not clearInventories then return end
 
@@ -2402,7 +2430,7 @@ RegisterServerEvent('ox_inventory:giveItem', function(slot, target, count)
 			fromType = fromInventory.type,
 			toInventory = toInventory.id,
 			toType = toInventory.type,
-			count = data.count,
+			count = count,
 			action = 'give',
 			fromSlot = data,
 		}) then
