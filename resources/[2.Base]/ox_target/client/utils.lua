@@ -195,8 +195,8 @@ SetTimeout(0, function()
         require 'client.framework.ox'
     elseif utils.hasExport('es_extended.getSharedObject') then
         require 'client.framework.esx'
-    elseif utils.hasExport('qb-core.GetCoreObject') then
-        require 'client.framework.qb'
+    elseif utils.hasExport('qbx_core.HasGroup') then
+        require 'client.framework.qbx'
     elseif utils.hasExport('ND_Core.getPlayer') then
         require 'client.framework.nd'
     end

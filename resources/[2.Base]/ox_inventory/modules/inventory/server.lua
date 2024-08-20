@@ -95,8 +95,9 @@ local GetVehicleNumberPlateText = GetVehicleNumberPlateText
 ---Atempts to lazily load inventory data from the database or create a new player-owned instance for "personal" stashes
 ---@param data table
 ---@param player table
+---@param ignoreSecurityChecks boolean
 ---@return OxInventory | false | nil
-local function loadInventoryData(data, player)
+local function loadInventoryData(data, player, ignoreSecurityChecks)
 	local source = source
 	local inventory
 
@@ -178,7 +179,7 @@ local function loadInventoryData(data, player)
 
 		if stash then
 			if stash.jobs then stash.groups = stash.jobs end
-			if player and stash.groups and not server.hasGroup(player, stash.groups) then return end
+			if not ignoreSecurityChecks and player and stash.groups and not server.hasGroup(player, stash.groups) then return end
 
 			local owner
 
@@ -194,6 +195,10 @@ local function loadInventoryData(data, player)
 
 			if not inventory then
 				inventory = Inventory.Create(stash.name, stash.label or stash.name, 'stash', stash.slots, 0, stash.maxWeight, owner, nil, stash.groups)
+
+                if stash.coords then
+					inventory.coords = stash.coords
+				end
 			end
 		end
 	end
@@ -207,20 +212,20 @@ local function loadInventoryData(data, player)
 end
 
 setmetatable(Inventory, {
-	__call = function(self, inv, player)
+	__call = function(self, inv, player, ignoreSecurityChecks)
 		if not inv then
 			return self
 		elseif type(inv) == 'table' then
 			if inv.__index then return inv end
 
-			return not inv.owner and Inventories[inv.id] or loadInventoryData(inv, player)
+			return not inv.owner and Inventories[inv.id] or loadInventoryData(inv, player, ignoreSecurityChecks)
 		end
 
-		return Inventories[inv] or loadInventoryData({ id = inv }, player)
+		return Inventories[inv] or loadInventoryData({ id = inv }, player, ignoreSecurityChecks)
 	end
 })
 
----@cast Inventory +fun(inv: inventory, player?: inventory): OxInventory|false|nil
+---@cast Inventory +fun(inv: inventory, player?: inventory, ignoreSecurityChecks?: boolean): OxInventory|false|nil
 
 ---@param inv inventory
 ---@param owner? string | number
@@ -431,6 +436,10 @@ function Inventory.SlotWeight(item, slot, ignoreCount)
 			weight += (ammoWeight * slot.metadata.ammo)
 		end
 	end
+
+    if item.hash == `WEAPON_PETROLCAN` then
+        weight += 15000 * (slot.metadata.ammo / 100)
+    end
 
 	if slot.metadata.components then
 		for i = #slot.metadata.components, 1, -1 do
@@ -1248,7 +1257,8 @@ exports('Search', Inventory.Search)
 ---@param inv inventory
 ---@param item table | string
 ---@param metadata? table
-function Inventory.GetItemSlots(inv, item, metadata)
+---@param strict? boolean
+function Inventory.GetItemSlots(inv, item, metadata, strict)
 	if type(item) ~= 'table' then item = Items(item) end
 	if not item then return end
 
@@ -1257,13 +1267,16 @@ function Inventory.GetItemSlots(inv, item, metadata)
 
 	local totalCount, slots, emptySlots = 0, {}, inv.slots
 
+	if strict == nil then strict = true end
+	local tablematch = strict and table.matches or table.contains
+
 	for k, v in pairs(inv.items) do
 		emptySlots -= 1
 		if v.name == item.name then
 			if metadata and v.metadata == nil then
 				v.metadata = {}
 			end
-			if not metadata or table.matches(v.metadata, metadata) then
+			if not metadata or tablematch(v.metadata, metadata) then
 				totalCount = totalCount + v.count
 				slots[k] = v.count
 			end
@@ -1280,8 +1293,9 @@ exports('GetItemSlots', Inventory.GetItemSlots)
 ---@param metadata? table | string
 ---@param slot? number
 ---@param ignoreTotal? boolean
+---@param strict? boolean
 ---@return boolean? success, string? response
-function Inventory.RemoveItem(inv, item, count, metadata, slot, ignoreTotal)
+function Inventory.RemoveItem(inv, item, count, metadata, slot, ignoreTotal, strict)
 	if type(item) ~= 'table' then item = Items(item) end
 
 	if not item then return false, 'invalid_item' end
@@ -1294,7 +1308,8 @@ function Inventory.RemoveItem(inv, item, count, metadata, slot, ignoreTotal)
 		if not inv?.slots then return false, 'invalid_inventory' end
 
 		metadata = assertMetadata(metadata)
-		local itemSlots, totalCount = Inventory.GetItemSlots(inv, item, metadata)
+		if strict == nil then strict = true end
+		local itemSlots, totalCount = Inventory.GetItemSlots(inv, item, metadata, strict)
 
 		if not itemSlots then return false end
 
@@ -1543,6 +1558,8 @@ local function dropItem(source, playerInventory, fromData, data)
 
     if toData.weight > shared.playerweight then return end
 
+    local dropId = generateInvId('drop')
+
 	if not TriggerEventHooks('swapItems', {
 		source = source,
 		fromInventory = playerInventory.id,
@@ -1553,6 +1570,7 @@ local function dropItem(source, playerInventory, fromData, data)
 		toType = 'drop',
 		count = data.count,
         action = 'move',
+        dropId = dropId,
 	}) then return end
 
     fromData.count -= data.count
@@ -1572,7 +1590,6 @@ local function dropItem(source, playerInventory, fromData, data)
 		playerInventory.weapon = nil
 	end
 
-	local dropId = generateInvId('drop')
 	local inventory = Inventory.Create(dropId, ('Drop %s'):format(dropId:gsub('%D', '')), 'drop', shared.dropslots, toData.weight, shared.dropweight, false, {[data.toSlot] = toData})
 
 	if not inventory then return end
@@ -2538,6 +2555,10 @@ local function updateWeapon(source, action, value, slot, specialAmmo)
                 weapon.metadata.durability = 0
             end
 
+            if item.hash == `WEAPON_PETROLCAN` then
+                weapon.weight = Inventory.SlotWeight(item, weapon)
+            end
+
 			if action ~= 'throw' then
 				inventory:syncSlotsWithPlayer({
 					{ item = weapon }
@@ -2585,7 +2606,10 @@ lib.callback.register('ox_inventory:removeAmmoFromWeapon', function(source, slot
 end)
 
 local function checkStashProperties(properties)
-	local name, slots, maxWeight, coords in properties
+	local name = properties.name
+	local slots = properties.slots
+	local maxWeight = properties.maxWeight
+	local coords = properties.coords
 
 	if type(name) ~= 'string' then
 		error(('received %s for stash name (expected string)'):format(type(name)))

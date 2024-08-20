@@ -9,7 +9,6 @@ local options = require 'client.api'.getTargetOptions()
 require 'client.debug'
 require 'client.defaults'
 require 'client.compat.qtarget'
-require 'client.compat.qb-target'
 
 local SendNuiMessage = SendNuiMessage
 local GetEntityCoords = GetEntityCoords
@@ -302,8 +301,7 @@ local function startTargeting()
             elseif menuChanged or hasTarget ~= 1 and hidden ~= totalOptions then
                 hasTarget = options.size
 
-                if currentMenu then
-                    totalOptions += 1
+                if currentMenu and options.__global[1]?.name ~= 'builtin:goback' then
                     table.insert(options.__global, 1,
                         {
                             icon = 'fa-solid fa-circle-chevron-left',

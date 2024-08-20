@@ -1,12 +1,18 @@
--- Handcuff
 local isHandcuffed, handcuffTimer = false, {}
 dragStatus = {}
 dragStatus.isDragged =  false
 
 AddEventHandler('handcuff', function(data)
-	local handcuffs = exports.ox_inventory:Search('count', 'handcuffs')
-	local rope = exports.ox_inventory:Search('count', 'rope')
-	if ESX.PlayerData.job and ESX.PlayerData.job.name == 'police' and handcuffs >= 1 or rope >= 1 and IsEntityPlayingAnim(data.entity, "missminuteman_1ig_2", "handsup_base", 3) then
+	local valid = false
+	local count = exports.ox_inventory:Search('count', Config.Items)
+	if count then
+		for name, count in pairs(count) do
+			if count ~= 0 then
+				valid = true
+			end
+		end
+	end
+	if valid then
 		TriggerServerEvent('esx_interact:handcuff', GetPlayerServerId(NetworkGetPlayerIndexFromPed(data.entity)))
 	else
 		lib.notify({
@@ -21,21 +27,21 @@ AddEventHandler('handcuff', function(data)
 	end
 end)
 
+
 RegisterNetEvent('esx_interact:handcuff')
 AddEventHandler('esx_interact:handcuff', function()
 	isHandcuffed = not isHandcuffed
-	local playerPed = PlayerPedId()
 	if isHandcuffed then
 		RequestAnimDict('mp_arresting')
 		while not HasAnimDictLoaded('mp_arresting') do
 			Wait(100)
 		end
-		TaskPlayAnim(playerPed, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0, 0, 0, 0)
+		TaskPlayAnim(cache.ped, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0, 0, 0, 0)
 		RemoveAnimDict('mp_arresting')
-		SetEnableHandcuffs(playerPed, true)
-		DisablePlayerFiring(playerPed, true)
-		SetCurrentPedWeapon(playerPed, GetHashKey('WEAPON_UNARMED'), true)
-		SetPedCanPlayGestureAnims(playerPed, false)
+		SetEnableHandcuffs(cache.ped, true)
+		DisablePlayerFiring(cache.ped, true)
+		SetCurrentPedWeapon(cache.ped, `WEAPON_UNARMED`, true)
+		SetPedCanPlayGestureAnims(cache.ped, false)
 		DisplayRadar(false)
 		if Config.EnableHandcuffTimer then
 			if handcuffTimer.active then
@@ -48,10 +54,10 @@ AddEventHandler('esx_interact:handcuff', function()
 		if Config.EnableHandcuffTimer and handcuffTimer.active then
 			ESX.ClearTimeout(handcuffTimer.task)
 		end
-		ClearPedSecondaryTask(playerPed)
-		SetEnableHandcuffs(playerPed, false)
-		DisablePlayerFiring(playerPed, false)
-		SetPedCanPlayGestureAnims(playerPed, true)
+		ClearPedSecondaryTask(cache.ped)
+		SetEnableHandcuffs(cache.ped, false)
+		DisablePlayerFiring(cache.ped, false)
+		SetPedCanPlayGestureAnims(cache.ped, true)
 		DisplayRadar(true)
 	end
 end)
@@ -59,17 +65,13 @@ end)
 RegisterNetEvent('esx_interact:unrestrain')
 AddEventHandler('esx_interact:unrestrain', function()
 	if isHandcuffed then
-		local playerPed = PlayerPedId()
 		isHandcuffed = false
-
-		ClearPedSecondaryTask(playerPed)
-		SetEnableHandcuffs(playerPed, false)
-		DisablePlayerFiring(playerPed, false)
-		SetPedCanPlayGestureAnims(playerPed, true)
-		FreezeEntityPosition(playerPed, false)
+		ClearPedSecondaryTask(cache.ped)
+		SetEnableHandcuffs(cache.ped, false)
+		DisablePlayerFiring(cache.ped, false)
+		SetPedCanPlayGestureAnims(cache.ped, true)
+		FreezeEntityPosition(cache.ped, false)
 		DisplayRadar(true)
-
-		-- end timer
 		if Config.EnableHandcuffTimer and handcuffTimer.active then
 			ESX.ClearTimeout(handcuffTimer.task)
 		end
@@ -79,8 +81,6 @@ end)
 CreateThread(function()
 	while true do
 		Wait(0)
-		local playerPed = PlayerPedId()
-
 		if isHandcuffed then
 			DisableControlAction(0, 1, true)
 			DisableControlAction(0, 2, true)
@@ -114,10 +114,9 @@ CreateThread(function()
 			DisableControlAction(0, 143, true)
 			DisableControlAction(0, 75, true)
 			DisableControlAction(27, 75, true)
-
-			if IsEntityPlayingAnim(playerPed, 'mp_arresting', 'idle', 3) ~= 1 then
+			if IsEntityPlayingAnim(cache.ped, 'mp_arresting', 'idle', 3) ~= 1 then
 				ESX.Streaming.RequestAnimDict('mp_arresting', function()
-					TaskPlayAnim(playerPed, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0.0, false, false, false)
+					TaskPlayAnim(cache.ped, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0.0, false, false, false)
 					RemoveAnimDict('mp_arresting')
 				end)
 			end
@@ -133,7 +132,7 @@ end)
 
 RegisterNetEvent('esx_interact:escort')-- escort 
 AddEventHandler('esx_interact:escort', function(dragger)
-	if isHandcuffed or IsPedDeadOrDying(PlayerPedId(), true) then
+	if isHandcuffed or IsPedDeadOrDying(cache.ped, true) then
 		dragStatus.isDragged = not dragStatus.isDragged
 		dragStatus.dragger = dragger
 	end
@@ -142,14 +141,14 @@ end)
 CreateThread(function()
 	local wasDragged
 	while true do
-		if isHandcuffed then -- and (not IsEntityPlayingAnim(PlayerPedId(), 'mp_arresting', 'idle', 3)) then -- after falling player hands get detached the second and not detcting how it should 
-			TaskPlayAnim(PlayerPedId(), 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0, 0, 0, 0)
+		if isHandcuffed then
+			TaskPlayAnim(cache.ped, 'mp_arresting', 'idle', 8.0, -8, -1, 49, 0, 0, 0, 0)
 		end
 		if dragStatus.isDragged then
 			Sleep = 50
 			
 			local targetPed = GetPlayerPed(GetPlayerFromServerId(dragStatus.dragger))
-			if DoesEntityExist(targetPed) and IsPedOnFoot(targetPed) and (isHandcuffed or IsPedDeadOrDying(PlayerPedId(), true)) then
+			if DoesEntityExist(targetPed) and IsPedOnFoot(targetPed) and (isHandcuffed or IsPedDeadOrDying(cache.ped, true)) then
 				if not wasDragged then
 					if Config.npwd then 
 						exports.npwd:setPhoneDisabled(true)
@@ -227,28 +226,23 @@ end)
 RegisterNetEvent('esx_interact:putInVehicle')
 AddEventHandler('esx_interact:putInVehicle', function()
 	if isHandcuffed then
-		local playerPed = PlayerPedId()
 		local vehicle, distance = ESX.Game.GetClosestVehicle()
-
 		if vehicle and distance < 5 then
 			local maxSeats, freeSeat = GetVehicleMaxNumberOfPassengers(vehicle)
-
 			for i=maxSeats - 1, 0, -1 do
 				if IsVehicleSeatFree(vehicle, i) then
 					freeSeat = i
 					break
 				end
 			end
-
 			if freeSeat then
-				TaskWarpPedIntoVehicle(playerPed, vehicle, freeSeat)
+				TaskWarpPedIntoVehicle(cache.ped, vehicle, freeSeat)
 				dragStatus.isDragged = false
 			end
 		end
 	end
 end)
 
--- Out the vehicle
 AddEventHandler('outveh', function(data)
 	local closestPlayer, closestDistance = ESX.Game.GetClosestPlayer()
 	if closestPlayer ~= -1 and closestDistance <= 3.0 then
@@ -258,24 +252,20 @@ end)
 
 RegisterNetEvent('esx_interact:OutVehicle')
 AddEventHandler('esx_interact:OutVehicle', function()
-	local playerPed = PlayerPedId()
-	if IsPedSittingInAnyVehicle(playerPed) then
-		local vehicle = GetVehiclePedIsIn(playerPed, false)
-		TaskLeaveVehicle(playerPed, vehicle, 64)
+	if IsPedSittingInAnyVehicle(cache.ped) then
+		local vehicle = GetVehiclePedIsIn(cache.ped, false)
+		TaskLeaveVehicle(cache.ped, vehicle, 64)
 	end
 end)
 
--- ID
 AddEventHandler('id', function(data)
 	TriggerServerEvent('jsfour-idcard:open', GetPlayerServerId(NetworkGetPlayerIndexFromPed(data.entity)), GetPlayerServerId(PlayerId()))
 end)
 
--- ID Driver
 AddEventHandler('id-driver', function(data)
 	TriggerServerEvent('jsfour-idcard:open', GetPlayerServerId(NetworkGetPlayerIndexFromPed(data.entity)), GetPlayerServerId(PlayerId()), 'driver')
 end)
 
--- Billing
 RegisterNetEvent('billing', function(data)
 	local player = ESX.Game.GetClosestPlayer()
 	if ESX.PlayerData.job and ESX.PlayerData.job.name == 'unemployed' then
