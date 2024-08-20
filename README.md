@@ -1,1 +1,2 @@
-Micky Studio: https://discord.gg/pZX7hadmXb Tebex: https://mickystudio-dev.tebex.io
+Fellow Community: https://discord.gg/8DCMzdpe96
+Tebex: https://fellowcommunity.tebex.io/
