@@ -1,0 +1,21 @@
+RegisterNetEvent('fw_interact:handcuff')
+AddEventHandler('fw_interact:handcuff', function(target)
+	TriggerClientEvent('fw_interact:handcuff', target)
+end)
+
+RegisterNetEvent('fw_interact:escort')
+AddEventHandler('fw_interact:escort', function(target)
+		TriggerClientEvent('fw_interact:escort', target, source)
+end)
+
+RegisterNetEvent('fw_interact:putInVehicle')
+AddEventHandler('fw_interact:putInVehicle', function(target)
+	local xPlayer = ESX.GetPlayerFromId(source)
+	TriggerClientEvent('fw_interact:putInVehicle', target)
+end)
+
+RegisterNetEvent('fw_interact:OutVehicle')
+AddEventHandler('fw_interact:OutVehicle', function(target)
+	local xPlayer = ESX.GetPlayerFromId(source)
+	TriggerClientEvent('fw_interact:OutVehicle', target)
+end)
