@@ -17,7 +17,7 @@ if not IsDuplicityVersion() then -- Only register this event for the client
         ESX.PlayerLoaded = true
     end)
 
-    RegisterNetEvent("esx:onPlayerLogout", function()
+    ESX.SecureNetEvent("esx:onPlayerLogout", function()
         ESX.PlayerLoaded = false
         ESX.PlayerData = {}
     end)

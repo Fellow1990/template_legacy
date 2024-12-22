@@ -13,11 +13,14 @@ end)
 local ESX
 
 SetTimeout(500, function()
-	ESX = exports.es_extended:getSharedObject()
+    lib.checkDependency('es_extended', '1.6.0', true)
 
-	if ESX.CreatePickup then
-		error('ox_inventory requires a ESX Legacy v1.6.0 or above, refer to the documentation.')
-	end
+	ESX = exports.es_extended:getSharedObject()
+    local customInventory = ESX.GetConfig().CustomInventory
+
+	if customInventory ~= nil and customInventory ~= "ox" then
+        error('es_extended has not been configured to enable support for ox_inventory!\nEnsure Config.CustomInventory has been set to "ox" in your es_extended resource config.')
+    end
 
 	server.UseItem = ESX.UseItem
 	server.GetPlayerFromId = ESX.GetPlayerFromId

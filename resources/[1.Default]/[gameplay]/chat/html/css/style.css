@@ -1,0 +1,294 @@
+
+
+
+@import url('https://fonts.googleapis.com/css?family=Tajawal:700&display=swap&subset=arabic');
+@import url('https://use.fontawesome.com/releases/v5.6.3/css/all.css');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&family=Changa:wght@200;300;400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&display=swap');
+
+
+.color-0{color: #ffffff;}
+.color-1{color: #ff4444;}
+.color-2{color: #99cc00;}
+.color-3{color: #ffbb33;}
+.color-4{color: #0099cc;}
+.color-5{color: #33b5e5;}
+.color-6{color: #aa66cc;}
+.color-8{color: #cc0000;}
+.color-9{color: #cc0068;}
+
+* {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  margin: 0;
+  padding: 0;
+  text-shadow: 0px 0px 0px black;
+}
+
+
+.no-grow {
+  flex-grow: 0;
+}
+
+em {
+  font-style: normal;
+}
+
+#app {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+  background-color: transparent;
+}
+
+
+
+
+.chat-window {
+  position: absolute;
+  left: 15px;
+  width: 32vw;
+  height: 20vh;
+  background-color: rgba(255, 255, 255, 0);
+  top: 2.5vh;
+  -webkit-animation-duration: 2s;
+}
+
+.chat-messages {
+  max-height: 100%;
+  font-size: 14px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+}
+
+
+.chat-input {
+  font-size: 0.9rem;
+  position: absolute;
+  top: 27vh;
+  left: 15px;
+  width: 28vw;
+  box-sizing: border-box;
+}
+
+textarea {
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  font-size: 14px;
+  display: block;
+  box-sizing: border-box;
+  padding: 0.65vw;
+  color: #ffffff;
+  background-color: #2f3640b6;
+  width: 80%;
+  min-height: 4.3vh;
+  max-height: 4.3vh;
+  border: 1px solid #333b46;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  resize: none;
+}
+
+.msg {
+  margin-bottom: 5px;
+}
+
+.suggestions {
+  list-style-type: none;
+  padding: 5px;
+  padding-left: 27px;
+  font-size: 0.9rem;
+  font-family: 'Baloo Bhaijaan 2', cursive;
+  box-sizing: border-box;
+  border-radius: 5px;
+  color: white;
+  background-color: #2f3640b6;
+  border: 1px solid #ffffffec;
+  width: 80%;
+}
+
+.help {
+  margin-top: -10px;
+  color: #ffffffe7;
+}
+
+.disabled {
+  margin-top: -10px;
+  color: #ffffff93;
+}
+
+.suggestion {
+  margin-bottom: 5px;
+  color: #ffffffec;
+}
+
+.chat-message {
+  display: inline-block !important;
+  padding: 0.65vw;
+  margin: 0.1vw;
+  border-radius: 5px;
+  background-color: rgba(47, 114, 181, 0.9);
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+
+.chat-message.advert {
+  background-color: rgba(47, 92, 115, 0.85);
+}
+
+.warning {
+  background-color: rgba(190, 97, 18, 0.85);
+}
+
+.normal {
+  background-color: rgba(51, 112, 165, 0.85);
+}
+
+.error {
+  background-color: rgba(163, 62, 48, 0.85);
+}
+
+.chat-message.system {
+  background-color: rgb(67, 57, 111);
+}
+
+.chat-message.emergency {
+  background-color: rgba(163, 62, 48, 0.85);
+}
+
+.chat-message.nonemergency {
+  background-color: rgba(112, 25, 25, 0.85);
+}
+
+.chat-message.report {
+  background-color: rgba(86, 173, 10, 0.85);
+}
+
+.chat-message.staffchat {
+  background-color: rgba(219, 52, 235, 0.75);
+}
+
+.chat-message.advert {
+	color :  rgb(0, 0, 0);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/914217377934237726/idcar34d3_1.png);
+}
+
+.chat-message.hunting {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/868569882122403920/The_Mission_Hunt_Card.png);
+}
+
+.chat-message.weapons {
+	color :  rgb(0, 0, 0);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/954846463345717308/weapon_card.png);
+}
+
+
+
+.chat-message.advert1 {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/914217377934237726/idcar34d3_1.png);
+}
+
+
+.chat-message.drive {
+	color :  rgb(0, 0, 0);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/914217302340292689/idcard2343_1.png);
+}
+.chat-message.drive1 {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/914217302340292689/idcard2343_1.png);
+}
+.chat-message.ems {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/837486141786947614/E99-B544-F-4220-4-CAA-8-D08-6361-DCAC107-D_1.png);
+}
+.chat-message.cia {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/843372359729938432/cia.png);
+}
+.chat-message.sheriff {
+	color :  rgb(228, 228, 228);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	
+	text-align: center;
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/844097111615209483/SUREHGRCARD.png);
+}
+.chat-message.police {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/837486173415931934/52-BD3274-DA32-4-F9-D-BC73-D9-ADCEA60-A3-E_1.png);
+}
+.chat-message.swat {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/837486228374028338/5-A2-BA9-55-57-A9-4951-BEC6-C4-FCA89-ABC3-B_1.png);
+}
+.chat-message.wzer {
+	color :  rgb(245, 245, 245);
+	/* margin-left: 50%; */
+	width : 450px;
+	height : 220px;
+	text-align: center;
+	/* text-bottom: 50px; */
+	background: url(https://cdn.discordapp.com/attachments/793424382319394826/837486129393434644/52-BD3274-DA32-4-F9-D-BC73-D9-ADCEA60-A3-E_1.png);
+}

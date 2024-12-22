@@ -19,22 +19,10 @@ local function doesJobAndGradesExist(name, grades)
    return true
 end
 
-local function generateTransactionQueries(name,grades)
-    local queries = {}
-    for _, grade in ipairs(grades) do
-        queries[#queries+1] = {
-            query = 'INSERT INTO job_grades (job_name, grade, name, label, salary, skin_male, skin_female) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            values = {name, grade.grade, grade.name, grade.label, grade.salary, '{}', '{}'}
-        }
-    end
-
-    return queries
-end
-
 local function generateNewJobTable(name, label, grades)
     local job = { name = name, label = label, grades = {} }
     for _, v in pairs(grades) do
-        job.grades[tostring(v.grade)] = { job_name = name, grade = v.grade, name = v.name, label = v.label, salary = v.salary, skin_male = {}, skin_female = {} }
+        job.grades[tostring(v.grade)] = { job_name = name, grade = v.grade, name = v.name, label = v.label, salary = v.salary, skin_male = v.skin_male or '{}', skin_female = v.skin_female or '{}' }
     end
 
     return job
@@ -60,43 +48,47 @@ function ESX.CreateJob(name, label, grades)
 
     if not name or name == '' then
         notify("ERROR",currentResourceName, 'Missing argument `name`')
-        return
+        return success
     end
+
     if not label or label == '' then
         notify("ERROR",currentResourceName, 'Missing argument `label`')
-        return
+        return success
     end
+
     if not grades or not next(grades) then
         notify("ERROR",currentResourceName, 'Missing argument `grades`')
-        return
+        return success
     end
 
     local currentJobExist = doesJobAndGradesExist(name, grades)
 
     if currentJobExist then
         notify("ERROR",currentResourceName, 'Job or grades already exists: `%s`', name)
-        return
+        return success
     end
 
-    MySQL.insert('INSERT IGNORE INTO jobs (name, label) VALUES (?, ?)', {name, label}, function(jobId)
-        if jobId == nil or jobId == 0 then
-            notify("ERROR",currentResourceName, 'Failed to insert job: `%s`', name)
-            return
-        end
+    local queries = {
+        { query = 'INSERT INTO jobs (name, label) VALUES (?, ?)', values = { name, label } }
+    }
 
-        local queries = generateTransactionQueries(name, grades)
+    for _, grade in ipairs(grades) do
+        queries[#queries + 1] = {
+            query = 'INSERT INTO job_grades (job_name, grade, name, label, salary, skin_male, skin_female) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            values = { name, grade.grade, grade.name, grade.label, grade.salary, '{}', '{}' }
+        }
+    end
 
-        MySQL.transaction(queries, function(results)
-            success = results
-            if not results then
-                notify("ERROR",currentResourceName, 'Failed to insert one or more grades for job: `%s`', name)
-                return
-            end
+    success = exports.oxmysql:transaction_async(queries)
 
-            ESX.Jobs[name] = generateNewJobTable(name,label,grades)
-            notify("SUCCESS",currentResourceName, 'Job created successfully: `%s`', name)
-        end)
-    end)
+    if not success then
+        notify("ERROR", currentResourceName, 'Failed to insert one or more grades for job: `%s`', name)
+        return success
+    end
+
+    ESX.Jobs[name] = generateNewJobTable(name, label, grades)
+
+    notify("SUCCESS", currentResourceName, 'Job created successfully: `%s`', name)
 
     return success
 end

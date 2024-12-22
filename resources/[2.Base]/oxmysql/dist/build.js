@@ -9,7 +9,6 @@ var __knownSymbol = (name, symbol) => (symbol = Symbol[name]) ? symbol : Symbol.
 var __typeError = (msg) => {
   throw TypeError(msg);
 };
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
@@ -37,20 +36,10 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
 var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
 var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
-var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
-var __privateWrapper = (obj, member, setter, getter) => ({
-  set _(value) {
-    __privateSet(obj, member, value, setter);
-  },
-  get _() {
-    return __privateGet(obj, member, getter);
-  }
-});
 var __using = (stack, value, async) => {
   if (value != null) {
     if (typeof value !== "object" && typeof value !== "function") __typeError("Object expected");
@@ -1793,1269 +1782,241 @@ var require_denque = __commonJS({
   }
 });
 
-// node_modules/.pnpm/lru-cache@8.0.5/node_modules/lru-cache/dist/cjs/index.js
-var require_cjs = __commonJS({
-  "node_modules/.pnpm/lru-cache@8.0.5/node_modules/lru-cache/dist/cjs/index.js"(exports2) {
+// node_modules/.pnpm/lru.min@1.1.1/node_modules/lru.min/lib/index.js
+var require_lib = __commonJS({
+  "node_modules/.pnpm/lru.min@1.1.1/node_modules/lru.min/lib/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.LRUCache = void 0;
-    var perf = typeof performance === "object" && performance && typeof performance.now === "function" ? performance : Date;
-    var warned = /* @__PURE__ */ new Set();
-    var emitWarning = /* @__PURE__ */ __name((msg, type, code, fn) => {
-      typeof process === "object" && process && typeof process.emitWarning === "function" ? process.emitWarning(msg, type, code, fn) : console.error(`[${code}] ${type}: ${msg}`);
-    }, "emitWarning");
-    var shouldWarn = /* @__PURE__ */ __name((code) => !warned.has(code), "shouldWarn");
-    var TYPE = Symbol("type");
-    var isPosInt = /* @__PURE__ */ __name((n) => n && n === Math.floor(n) && n > 0 && isFinite(n), "isPosInt");
-    var getUintArray = /* @__PURE__ */ __name((max) => !isPosInt(max) ? null : max <= Math.pow(2, 8) ? Uint8Array : max <= Math.pow(2, 16) ? Uint16Array : max <= Math.pow(2, 32) ? Uint32Array : max <= Number.MAX_SAFE_INTEGER ? ZeroArray : null, "getUintArray");
-    var _ZeroArray = class _ZeroArray extends Array {
-      constructor(size) {
-        super(size);
-        this.fill(0);
-      }
-    };
-    __name(_ZeroArray, "ZeroArray");
-    var ZeroArray = _ZeroArray;
-    var _constructing;
-    var _Stack = class _Stack {
-      heap;
-      length;
-      static create(max) {
-        const HeapCls = getUintArray(max);
-        if (!HeapCls)
-          return [];
-        __privateSet(_Stack, _constructing, true);
-        const s2 = new _Stack(max, HeapCls);
-        __privateSet(_Stack, _constructing, false);
-        return s2;
-      }
-      constructor(max, HeapCls) {
-        if (!__privateGet(_Stack, _constructing)) {
-          throw new TypeError("instantiate Stack using Stack.create(n)");
-        }
-        this.heap = new HeapCls(max);
-        this.length = 0;
-      }
-      push(n) {
-        this.heap[this.length++] = n;
-      }
-      pop() {
-        return this.heap[--this.length];
-      }
-    };
-    _constructing = new WeakMap();
-    __name(_Stack, "Stack");
-    // private constructor
-    __privateAdd(_Stack, _constructing, false);
-    var Stack = _Stack;
-    var _max, _maxSize, _dispose, _disposeAfter, _fetchMethod, _size2, _calculatedSize, _keyMap, _keyList, _valList, _next, _prev, _head, _tail, _free, _disposed, _sizes, _starts, _ttls, _hasDispose, _hasFetchMethod, _hasDisposeAfter, _LRUCache_instances, initializeTTLTracking_fn, _updateItemAge, _statusTTL, _setItemTTL, _isStale, initializeSizeTracking_fn, _removeItemSize, _addItemSize, _requireSize, indexes_fn, rindexes_fn, isValidIndex_fn, evict_fn, backgroundFetch_fn, isBackgroundFetch_fn, connect_fn, moveToTail_fn;
-    var _LRUCache = class _LRUCache {
-      constructor(options) {
-        __privateAdd(this, _LRUCache_instances);
-        // properties coming in from the options of these, only max and maxSize
-        // really *need* to be protected. The rest can be modified, as they just
-        // set defaults for various methods.
-        __privateAdd(this, _max);
-        __privateAdd(this, _maxSize);
-        __privateAdd(this, _dispose);
-        __privateAdd(this, _disposeAfter);
-        __privateAdd(this, _fetchMethod);
-        /**
-         * {@link LRUCache.OptionsBase.ttl}
-         */
-        __publicField(this, "ttl");
-        /**
-         * {@link LRUCache.OptionsBase.ttlResolution}
-         */
-        __publicField(this, "ttlResolution");
-        /**
-         * {@link LRUCache.OptionsBase.ttlAutopurge}
-         */
-        __publicField(this, "ttlAutopurge");
-        /**
-         * {@link LRUCache.OptionsBase.updateAgeOnGet}
-         */
-        __publicField(this, "updateAgeOnGet");
-        /**
-         * {@link LRUCache.OptionsBase.updateAgeOnHas}
-         */
-        __publicField(this, "updateAgeOnHas");
-        /**
-         * {@link LRUCache.OptionsBase.allowStale}
-         */
-        __publicField(this, "allowStale");
-        /**
-         * {@link LRUCache.OptionsBase.noDisposeOnSet}
-         */
-        __publicField(this, "noDisposeOnSet");
-        /**
-         * {@link LRUCache.OptionsBase.noUpdateTTL}
-         */
-        __publicField(this, "noUpdateTTL");
-        /**
-         * {@link LRUCache.OptionsBase.maxEntrySize}
-         */
-        __publicField(this, "maxEntrySize");
-        /**
-         * {@link LRUCache.OptionsBase.sizeCalculation}
-         */
-        __publicField(this, "sizeCalculation");
-        /**
-         * {@link LRUCache.OptionsBase.noDeleteOnFetchRejection}
-         */
-        __publicField(this, "noDeleteOnFetchRejection");
-        /**
-         * {@link LRUCache.OptionsBase.noDeleteOnStaleGet}
-         */
-        __publicField(this, "noDeleteOnStaleGet");
-        /**
-         * {@link LRUCache.OptionsBase.allowStaleOnFetchAbort}
-         */
-        __publicField(this, "allowStaleOnFetchAbort");
-        /**
-         * {@link LRUCache.OptionsBase.allowStaleOnFetchRejection}
-         */
-        __publicField(this, "allowStaleOnFetchRejection");
-        /**
-         * {@link LRUCache.OptionsBase.ignoreFetchAbort}
-         */
-        __publicField(this, "ignoreFetchAbort");
-        // computed properties
-        __privateAdd(this, _size2);
-        __privateAdd(this, _calculatedSize);
-        __privateAdd(this, _keyMap);
-        __privateAdd(this, _keyList);
-        __privateAdd(this, _valList);
-        __privateAdd(this, _next);
-        __privateAdd(this, _prev);
-        __privateAdd(this, _head);
-        __privateAdd(this, _tail);
-        __privateAdd(this, _free);
-        __privateAdd(this, _disposed);
-        __privateAdd(this, _sizes);
-        __privateAdd(this, _starts);
-        __privateAdd(this, _ttls);
-        __privateAdd(this, _hasDispose);
-        __privateAdd(this, _hasFetchMethod);
-        __privateAdd(this, _hasDisposeAfter);
-        // conditionally set private methods related to TTL
-        __privateAdd(this, _updateItemAge, /* @__PURE__ */ __name(() => {
-        }, "#updateItemAge"));
-        __privateAdd(this, _statusTTL, /* @__PURE__ */ __name(() => {
-        }, "#statusTTL"));
-        __privateAdd(this, _setItemTTL, /* @__PURE__ */ __name(() => {
-        }, "#setItemTTL"));
-        /* c8 ignore stop */
-        __privateAdd(this, _isStale, /* @__PURE__ */ __name(() => false, "#isStale"));
-        __privateAdd(this, _removeItemSize, /* @__PURE__ */ __name((_i) => {
-        }, "#removeItemSize"));
-        __privateAdd(this, _addItemSize, /* @__PURE__ */ __name((_i, _s, _st) => {
-        }, "#addItemSize"));
-        __privateAdd(this, _requireSize, /* @__PURE__ */ __name((_k, _v, size, sizeCalculation) => {
-          if (size || sizeCalculation) {
-            throw new TypeError("cannot set size without setting maxSize or maxEntrySize on cache");
+    exports2.createLRU = void 0;
+    var createLRU = /* @__PURE__ */ __name((options) => {
+      let { max, onEviction } = options;
+      if (!(Number.isInteger(max) && max > 0))
+        throw new TypeError("`max` must be a positive integer");
+      let size = 0;
+      let head = 0;
+      let tail = 0;
+      let free = [];
+      const keyMap = /* @__PURE__ */ new Map();
+      const keyList = new Array(max).fill(void 0);
+      const valList = new Array(max).fill(void 0);
+      const next = new Array(max).fill(0);
+      const prev = new Array(max).fill(0);
+      const setTail = /* @__PURE__ */ __name((index, type) => {
+        if (index === tail)
+          return;
+        const nextIndex = next[index];
+        const prevIndex = prev[index];
+        if (index === head)
+          head = nextIndex;
+        else if (type === "get" || prevIndex !== 0)
+          next[prevIndex] = nextIndex;
+        if (nextIndex !== 0)
+          prev[nextIndex] = prevIndex;
+        next[tail] = index;
+        prev[index] = tail;
+        next[index] = 0;
+        tail = index;
+      }, "setTail");
+      const _evict = /* @__PURE__ */ __name(() => {
+        const evictHead = head;
+        const key = keyList[evictHead];
+        onEviction === null || onEviction === void 0 ? void 0 : onEviction(key, valList[evictHead]);
+        keyMap.delete(key);
+        keyList[evictHead] = void 0;
+        valList[evictHead] = void 0;
+        head = next[evictHead];
+        if (head !== 0)
+          prev[head] = 0;
+        size--;
+        if (size === 0)
+          head = tail = 0;
+        free.push(evictHead);
+        return evictHead;
+      }, "_evict");
+      return {
+        /** Adds a key-value pair to the cache. Updates the value if the key already exists. */
+        set(key, value) {
+          if (key === void 0)
+            return;
+          let index = keyMap.get(key);
+          if (index === void 0) {
+            index = size === max ? _evict() : free.length > 0 ? free.pop() : size;
+            keyMap.set(key, index);
+            keyList[index] = key;
+            size++;
+          } else
+            onEviction === null || onEviction === void 0 ? void 0 : onEviction(key, valList[index]);
+          valList[index] = value;
+          if (size === 1)
+            head = tail = index;
+          else
+            setTail(index, "set");
+        },
+        /** Retrieves the value for a given key and moves the key to the most recent position. */
+        get(key) {
+          const index = keyMap.get(key);
+          if (index === void 0)
+            return;
+          if (index !== tail)
+            setTail(index, "get");
+          return valList[index];
+        },
+        /** Retrieves the value for a given key without changing its position. */
+        peek: /* @__PURE__ */ __name((key) => {
+          const index = keyMap.get(key);
+          return index !== void 0 ? valList[index] : void 0;
+        }, "peek"),
+        /** Checks if a key exists in the cache. */
+        has: /* @__PURE__ */ __name((key) => keyMap.has(key), "has"),
+        /** Iterates over all keys in the cache, from most recent to least recent. */
+        *keys() {
+          let current = tail;
+          for (let i2 = 0; i2 < size; i2++) {
+            yield keyList[current];
+            current = prev[current];
           }
-          return 0;
-        }, "#requireSize"));
-        const { max = 0, ttl, ttlResolution = 1, ttlAutopurge, updateAgeOnGet, updateAgeOnHas, allowStale, dispose, disposeAfter, noDisposeOnSet, noUpdateTTL, maxSize = 0, maxEntrySize = 0, sizeCalculation, fetchMethod, noDeleteOnFetchRejection, noDeleteOnStaleGet, allowStaleOnFetchRejection, allowStaleOnFetchAbort, ignoreFetchAbort } = options;
-        if (max !== 0 && !isPosInt(max)) {
-          throw new TypeError("max option must be a nonnegative integer");
-        }
-        const UintArray = max ? getUintArray(max) : Array;
-        if (!UintArray) {
-          throw new Error("invalid max value: " + max);
-        }
-        __privateSet(this, _max, max);
-        __privateSet(this, _maxSize, maxSize);
-        this.maxEntrySize = maxEntrySize || __privateGet(this, _maxSize);
-        this.sizeCalculation = sizeCalculation;
-        if (this.sizeCalculation) {
-          if (!__privateGet(this, _maxSize) && !this.maxEntrySize) {
-            throw new TypeError("cannot set sizeCalculation without setting maxSize or maxEntrySize");
+        },
+        /** Iterates over all values in the cache, from most recent to least recent. */
+        *values() {
+          let current = tail;
+          for (let i2 = 0; i2 < size; i2++) {
+            yield valList[current];
+            current = prev[current];
           }
-          if (typeof this.sizeCalculation !== "function") {
-            throw new TypeError("sizeCalculation set to non-function");
+        },
+        /** Iterates over `[key, value]` pairs in the cache, from most recent to least recent. */
+        *entries() {
+          let current = tail;
+          for (let i2 = 0; i2 < size; i2++) {
+            yield [keyList[current], valList[current]];
+            current = prev[current];
           }
-        }
-        if (fetchMethod !== void 0 && typeof fetchMethod !== "function") {
-          throw new TypeError("fetchMethod must be a function if specified");
-        }
-        __privateSet(this, _fetchMethod, fetchMethod);
-        __privateSet(this, _hasFetchMethod, !!fetchMethod);
-        __privateSet(this, _keyMap, /* @__PURE__ */ new Map());
-        __privateSet(this, _keyList, new Array(max).fill(void 0));
-        __privateSet(this, _valList, new Array(max).fill(void 0));
-        __privateSet(this, _next, new UintArray(max));
-        __privateSet(this, _prev, new UintArray(max));
-        __privateSet(this, _head, 0);
-        __privateSet(this, _tail, 0);
-        __privateSet(this, _free, Stack.create(max));
-        __privateSet(this, _size2, 0);
-        __privateSet(this, _calculatedSize, 0);
-        if (typeof dispose === "function") {
-          __privateSet(this, _dispose, dispose);
-        }
-        if (typeof disposeAfter === "function") {
-          __privateSet(this, _disposeAfter, disposeAfter);
-          __privateSet(this, _disposed, []);
-        } else {
-          __privateSet(this, _disposeAfter, void 0);
-          __privateSet(this, _disposed, void 0);
-        }
-        __privateSet(this, _hasDispose, !!__privateGet(this, _dispose));
-        __privateSet(this, _hasDisposeAfter, !!__privateGet(this, _disposeAfter));
-        this.noDisposeOnSet = !!noDisposeOnSet;
-        this.noUpdateTTL = !!noUpdateTTL;
-        this.noDeleteOnFetchRejection = !!noDeleteOnFetchRejection;
-        this.allowStaleOnFetchRejection = !!allowStaleOnFetchRejection;
-        this.allowStaleOnFetchAbort = !!allowStaleOnFetchAbort;
-        this.ignoreFetchAbort = !!ignoreFetchAbort;
-        if (this.maxEntrySize !== 0) {
-          if (__privateGet(this, _maxSize) !== 0) {
-            if (!isPosInt(__privateGet(this, _maxSize))) {
-              throw new TypeError("maxSize must be a positive integer if specified");
-            }
+        },
+        /** Iterates over each value-key pair in the cache, from most recent to least recent. */
+        forEach: /* @__PURE__ */ __name((callback) => {
+          let current = tail;
+          for (let i2 = 0; i2 < size; i2++) {
+            const key = keyList[current];
+            const value = valList[current];
+            callback(value, key);
+            current = prev[current];
           }
-          if (!isPosInt(this.maxEntrySize)) {
-            throw new TypeError("maxEntrySize must be a positive integer if specified");
-          }
-          __privateMethod(this, _LRUCache_instances, initializeSizeTracking_fn).call(this);
-        }
-        this.allowStale = !!allowStale;
-        this.noDeleteOnStaleGet = !!noDeleteOnStaleGet;
-        this.updateAgeOnGet = !!updateAgeOnGet;
-        this.updateAgeOnHas = !!updateAgeOnHas;
-        this.ttlResolution = isPosInt(ttlResolution) || ttlResolution === 0 ? ttlResolution : 1;
-        this.ttlAutopurge = !!ttlAutopurge;
-        this.ttl = ttl || 0;
-        if (this.ttl) {
-          if (!isPosInt(this.ttl)) {
-            throw new TypeError("ttl must be a positive integer if specified");
-          }
-          __privateMethod(this, _LRUCache_instances, initializeTTLTracking_fn).call(this);
-        }
-        if (__privateGet(this, _max) === 0 && this.ttl === 0 && __privateGet(this, _maxSize) === 0) {
-          throw new TypeError("At least one of max, maxSize, or ttl is required");
-        }
-        if (!this.ttlAutopurge && !__privateGet(this, _max) && !__privateGet(this, _maxSize)) {
-          const code = "LRU_CACHE_UNBOUNDED";
-          if (shouldWarn(code)) {
-            warned.add(code);
-            const msg = "TTL caching without ttlAutopurge, max, or maxSize can result in unbounded memory consumption.";
-            emitWarning(msg, "UnboundedCacheWarning", code, _LRUCache);
-          }
-        }
-      }
-      /**
-       * Do not call this method unless you need to inspect the
-       * inner workings of the cache.  If anything returned by this
-       * object is modified in any way, strange breakage may occur.
-       *
-       * These fields are private for a reason!
-       *
-       * @internal
-       */
-      static unsafeExposeInternals(c) {
-        return {
-          // properties
-          starts: __privateGet(c, _starts),
-          ttls: __privateGet(c, _ttls),
-          sizes: __privateGet(c, _sizes),
-          keyMap: __privateGet(c, _keyMap),
-          keyList: __privateGet(c, _keyList),
-          valList: __privateGet(c, _valList),
-          next: __privateGet(c, _next),
-          prev: __privateGet(c, _prev),
-          get head() {
-            return __privateGet(c, _head);
-          },
-          get tail() {
-            return __privateGet(c, _tail);
-          },
-          free: __privateGet(c, _free),
-          // methods
-          isBackgroundFetch: /* @__PURE__ */ __name((p) => {
-            var _a4;
-            return __privateMethod(_a4 = c, _LRUCache_instances, isBackgroundFetch_fn).call(_a4, p);
-          }, "isBackgroundFetch"),
-          backgroundFetch: /* @__PURE__ */ __name((k, index, options, context) => {
-            var _a4;
-            return __privateMethod(_a4 = c, _LRUCache_instances, backgroundFetch_fn).call(_a4, k, index, options, context);
-          }, "backgroundFetch"),
-          moveToTail: /* @__PURE__ */ __name((index) => {
-            var _a4;
-            return __privateMethod(_a4 = c, _LRUCache_instances, moveToTail_fn).call(_a4, index);
-          }, "moveToTail"),
-          indexes: /* @__PURE__ */ __name((options) => {
-            var _a4;
-            return __privateMethod(_a4 = c, _LRUCache_instances, indexes_fn).call(_a4, options);
-          }, "indexes"),
-          rindexes: /* @__PURE__ */ __name((options) => {
-            var _a4;
-            return __privateMethod(_a4 = c, _LRUCache_instances, rindexes_fn).call(_a4, options);
-          }, "rindexes"),
-          isStale: /* @__PURE__ */ __name((index) => {
-            var _a4;
-            return __privateGet(_a4 = c, _isStale).call(_a4, index);
-          }, "isStale")
-        };
-      }
-      // Protected read-only members
-      /**
-       * {@link LRUCache.OptionsBase.max} (read-only)
-       */
-      get max() {
-        return __privateGet(this, _max);
-      }
-      /**
-       * {@link LRUCache.OptionsBase.maxSize} (read-only)
-       */
-      get maxSize() {
-        return __privateGet(this, _maxSize);
-      }
-      /**
-       * The total computed size of items in the cache (read-only)
-       */
-      get calculatedSize() {
-        return __privateGet(this, _calculatedSize);
-      }
-      /**
-       * The number of items stored in the cache (read-only)
-       */
-      get size() {
-        return __privateGet(this, _size2);
-      }
-      /**
-       * {@link LRUCache.OptionsBase.fetchMethod} (read-only)
-       */
-      get fetchMethod() {
-        return __privateGet(this, _fetchMethod);
-      }
-      /**
-       * {@link LRUCache.OptionsBase.dispose} (read-only)
-       */
-      get dispose() {
-        return __privateGet(this, _dispose);
-      }
-      /**
-       * {@link LRUCache.OptionsBase.disposeAfter} (read-only)
-       */
-      get disposeAfter() {
-        return __privateGet(this, _disposeAfter);
-      }
-      /**
-       * Return the remaining TTL time for a given entry key
-       */
-      getRemainingTTL(key) {
-        return __privateGet(this, _keyMap).has(key) ? Infinity : 0;
-      }
-      /**
-       * Return a generator yielding `[key, value]` pairs,
-       * in order from most recently used to least recently used.
-       */
-      *entries() {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, indexes_fn).call(this)) {
-          if (__privateGet(this, _valList)[i2] !== void 0 && __privateGet(this, _keyList)[i2] !== void 0 && !__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, __privateGet(this, _valList)[i2])) {
-            yield [__privateGet(this, _keyList)[i2], __privateGet(this, _valList)[i2]];
-          }
-        }
-      }
-      /**
-       * Inverse order version of {@link LRUCache.entries}
-       *
-       * Return a generator yielding `[key, value]` pairs,
-       * in order from least recently used to most recently used.
-       */
-      *rentries() {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, rindexes_fn).call(this)) {
-          if (__privateGet(this, _valList)[i2] !== void 0 && __privateGet(this, _keyList)[i2] !== void 0 && !__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, __privateGet(this, _valList)[i2])) {
-            yield [__privateGet(this, _keyList)[i2], __privateGet(this, _valList)[i2]];
-          }
-        }
-      }
-      /**
-       * Return a generator yielding the keys in the cache,
-       * in order from most recently used to least recently used.
-       */
-      *keys() {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, indexes_fn).call(this)) {
-          const k = __privateGet(this, _keyList)[i2];
-          if (k !== void 0 && !__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, __privateGet(this, _valList)[i2])) {
-            yield k;
-          }
-        }
-      }
-      /**
-       * Inverse order version of {@link LRUCache.keys}
-       *
-       * Return a generator yielding the keys in the cache,
-       * in order from least recently used to most recently used.
-       */
-      *rkeys() {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, rindexes_fn).call(this)) {
-          const k = __privateGet(this, _keyList)[i2];
-          if (k !== void 0 && !__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, __privateGet(this, _valList)[i2])) {
-            yield k;
-          }
-        }
-      }
-      /**
-       * Return a generator yielding the values in the cache,
-       * in order from most recently used to least recently used.
-       */
-      *values() {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, indexes_fn).call(this)) {
-          const v = __privateGet(this, _valList)[i2];
-          if (v !== void 0 && !__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, __privateGet(this, _valList)[i2])) {
-            yield __privateGet(this, _valList)[i2];
-          }
-        }
-      }
-      /**
-       * Inverse order version of {@link LRUCache.values}
-       *
-       * Return a generator yielding the values in the cache,
-       * in order from least recently used to most recently used.
-       */
-      *rvalues() {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, rindexes_fn).call(this)) {
-          const v = __privateGet(this, _valList)[i2];
-          if (v !== void 0 && !__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, __privateGet(this, _valList)[i2])) {
-            yield __privateGet(this, _valList)[i2];
-          }
-        }
-      }
-      /**
-       * Iterating over the cache itself yields the same results as
-       * {@link LRUCache.entries}
-       */
-      [Symbol.iterator]() {
-        return this.entries();
-      }
-      /**
-       * Find a value for which the supplied fn method returns a truthy value,
-       * similar to Array.find().  fn is called as fn(value, key, cache).
-       */
-      find(fn, getOptions = {}) {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, indexes_fn).call(this)) {
-          const v = __privateGet(this, _valList)[i2];
-          const value = __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v) ? v.__staleWhileFetching : v;
-          if (value === void 0)
-            continue;
-          if (fn(value, __privateGet(this, _keyList)[i2], this)) {
-            return this.get(__privateGet(this, _keyList)[i2], getOptions);
-          }
-        }
-      }
-      /**
-       * Call the supplied function on each item in the cache, in order from
-       * most recently used to least recently used.  fn is called as
-       * fn(value, key, cache).  Does not update age or recenty of use.
-       * Does not iterate over stale values.
-       */
-      forEach(fn, thisp = this) {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, indexes_fn).call(this)) {
-          const v = __privateGet(this, _valList)[i2];
-          const value = __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v) ? v.__staleWhileFetching : v;
-          if (value === void 0)
-            continue;
-          fn.call(thisp, value, __privateGet(this, _keyList)[i2], this);
-        }
-      }
-      /**
-       * The same as {@link LRUCache.forEach} but items are iterated over in
-       * reverse order.  (ie, less recently used items are iterated over first.)
-       */
-      rforEach(fn, thisp = this) {
-        for (const i2 of __privateMethod(this, _LRUCache_instances, rindexes_fn).call(this)) {
-          const v = __privateGet(this, _valList)[i2];
-          const value = __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v) ? v.__staleWhileFetching : v;
-          if (value === void 0)
-            continue;
-          fn.call(thisp, value, __privateGet(this, _keyList)[i2], this);
-        }
-      }
-      /**
-       * Delete any stale entries. Returns true if anything was removed,
-       * false otherwise.
-       */
-      purgeStale() {
-        let deleted = false;
-        for (const i2 of __privateMethod(this, _LRUCache_instances, rindexes_fn).call(this, { allowStale: true })) {
-          if (__privateGet(this, _isStale).call(this, i2)) {
-            this.delete(__privateGet(this, _keyList)[i2]);
-            deleted = true;
-          }
-        }
-        return deleted;
-      }
-      /**
-       * Return an array of [key, {@link LRUCache.Entry}] tuples which can be
-       * passed to cache.load()
-       */
-      dump() {
-        const arr = [];
-        for (const i2 of __privateMethod(this, _LRUCache_instances, indexes_fn).call(this, { allowStale: true })) {
-          const key = __privateGet(this, _keyList)[i2];
-          const v = __privateGet(this, _valList)[i2];
-          const value = __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v) ? v.__staleWhileFetching : v;
-          if (value === void 0 || key === void 0)
-            continue;
-          const entry = { value };
-          if (__privateGet(this, _ttls) && __privateGet(this, _starts)) {
-            entry.ttl = __privateGet(this, _ttls)[i2];
-            const age = perf.now() - __privateGet(this, _starts)[i2];
-            entry.start = Math.floor(Date.now() - age);
-          }
-          if (__privateGet(this, _sizes)) {
-            entry.size = __privateGet(this, _sizes)[i2];
-          }
-          arr.unshift([key, entry]);
-        }
-        return arr;
-      }
-      /**
-       * Reset the cache and load in the items in entries in the order listed.
-       * Note that the shape of the resulting cache may be different if the
-       * same options are not used in both caches.
-       */
-      load(arr) {
-        this.clear();
-        for (const [key, entry] of arr) {
-          if (entry.start) {
-            const age = Date.now() - entry.start;
-            entry.start = perf.now() - age;
-          }
-          this.set(key, entry.value, entry);
-        }
-      }
-      /**
-       * Add a value to the cache.
-       */
-      set(k, v, setOptions = {}) {
-        var _a4, _b, _c;
-        const { ttl = this.ttl, start, noDisposeOnSet = this.noDisposeOnSet, sizeCalculation = this.sizeCalculation, status } = setOptions;
-        let { noUpdateTTL = this.noUpdateTTL } = setOptions;
-        const size = __privateGet(this, _requireSize).call(this, k, v, setOptions.size || 0, sizeCalculation);
-        if (this.maxEntrySize && size > this.maxEntrySize) {
-          if (status) {
-            status.set = "miss";
-            status.maxEntrySizeExceeded = true;
-          }
-          this.delete(k);
-          return this;
-        }
-        let index = __privateGet(this, _size2) === 0 ? void 0 : __privateGet(this, _keyMap).get(k);
-        if (index === void 0) {
-          index = __privateGet(this, _size2) === 0 ? __privateGet(this, _tail) : __privateGet(this, _free).length !== 0 ? __privateGet(this, _free).pop() : __privateGet(this, _size2) === __privateGet(this, _max) ? __privateMethod(this, _LRUCache_instances, evict_fn).call(this, false) : __privateGet(this, _size2);
-          __privateGet(this, _keyList)[index] = k;
-          __privateGet(this, _valList)[index] = v;
-          __privateGet(this, _keyMap).set(k, index);
-          __privateGet(this, _next)[__privateGet(this, _tail)] = index;
-          __privateGet(this, _prev)[index] = __privateGet(this, _tail);
-          __privateSet(this, _tail, index);
-          __privateWrapper(this, _size2)._++;
-          __privateGet(this, _addItemSize).call(this, index, size, status);
-          if (status)
-            status.set = "add";
-          noUpdateTTL = false;
-        } else {
-          __privateMethod(this, _LRUCache_instances, moveToTail_fn).call(this, index);
-          const oldVal = __privateGet(this, _valList)[index];
-          if (v !== oldVal) {
-            if (__privateGet(this, _hasFetchMethod) && __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, oldVal)) {
-              oldVal.__abortController.abort(new Error("replaced"));
-            } else if (!noDisposeOnSet) {
-              if (__privateGet(this, _hasDispose)) {
-                (_a4 = __privateGet(this, _dispose)) == null ? void 0 : _a4.call(this, oldVal, k, "set");
-              }
-              if (__privateGet(this, _hasDisposeAfter)) {
-                (_b = __privateGet(this, _disposed)) == null ? void 0 : _b.push([oldVal, k, "set"]);
-              }
-            }
-            __privateGet(this, _removeItemSize).call(this, index);
-            __privateGet(this, _addItemSize).call(this, index, size, status);
-            __privateGet(this, _valList)[index] = v;
-            if (status) {
-              status.set = "replace";
-              const oldValue = oldVal && __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, oldVal) ? oldVal.__staleWhileFetching : oldVal;
-              if (oldValue !== void 0)
-                status.oldValue = oldValue;
-            }
-          } else if (status) {
-            status.set = "update";
-          }
-        }
-        if (ttl !== 0 && !__privateGet(this, _ttls)) {
-          __privateMethod(this, _LRUCache_instances, initializeTTLTracking_fn).call(this);
-        }
-        if (__privateGet(this, _ttls)) {
-          if (!noUpdateTTL) {
-            __privateGet(this, _setItemTTL).call(this, index, ttl, start);
-          }
-          if (status)
-            __privateGet(this, _statusTTL).call(this, status, index);
-        }
-        if (!noDisposeOnSet && __privateGet(this, _hasDisposeAfter) && __privateGet(this, _disposed)) {
-          const dt = __privateGet(this, _disposed);
-          let task;
-          while (task = dt == null ? void 0 : dt.shift()) {
-            (_c = __privateGet(this, _disposeAfter)) == null ? void 0 : _c.call(this, ...task);
-          }
-        }
-        return this;
-      }
-      /**
-       * Evict the least recently used item, returning its value or
-       * `undefined` if cache is empty.
-       */
-      pop() {
-        var _a4;
-        try {
-          while (__privateGet(this, _size2)) {
-            const val = __privateGet(this, _valList)[__privateGet(this, _head)];
-            __privateMethod(this, _LRUCache_instances, evict_fn).call(this, true);
-            if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, val)) {
-              if (val.__staleWhileFetching) {
-                return val.__staleWhileFetching;
-              }
-            } else if (val !== void 0) {
-              return val;
-            }
-          }
-        } finally {
-          if (__privateGet(this, _hasDisposeAfter) && __privateGet(this, _disposed)) {
-            const dt = __privateGet(this, _disposed);
-            let task;
-            while (task = dt == null ? void 0 : dt.shift()) {
-              (_a4 = __privateGet(this, _disposeAfter)) == null ? void 0 : _a4.call(this, ...task);
-            }
-          }
-        }
-      }
-      /**
-       * Check if a key is in the cache, without updating the recency of use.
-       * Will return false if the item is stale, even though it is technically
-       * in the cache.
-       *
-       * Will not update item age unless
-       * {@link LRUCache.OptionsBase.updateAgeOnHas} is set.
-       */
-      has(k, hasOptions = {}) {
-        const { updateAgeOnHas = this.updateAgeOnHas, status } = hasOptions;
-        const index = __privateGet(this, _keyMap).get(k);
-        if (index !== void 0) {
-          const v = __privateGet(this, _valList)[index];
-          if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v) && v.__staleWhileFetching === void 0) {
+        }, "forEach"),
+        /** Deletes a key-value pair from the cache. */
+        delete(key) {
+          const index = keyMap.get(key);
+          if (index === void 0)
             return false;
+          onEviction === null || onEviction === void 0 ? void 0 : onEviction(key, valList[index]);
+          keyMap.delete(key);
+          free.push(index);
+          keyList[index] = void 0;
+          valList[index] = void 0;
+          const prevIndex = prev[index];
+          const nextIndex = next[index];
+          if (prevIndex !== 0)
+            next[prevIndex] = nextIndex;
+          if (nextIndex !== 0)
+            prev[nextIndex] = prevIndex;
+          if (index === head)
+            head = nextIndex;
+          if (index === tail)
+            tail = prevIndex;
+          size--;
+          return true;
+        },
+        /** Evicts the oldest item or the specified number of the oldest items from the cache. */
+        evict: /* @__PURE__ */ __name((number) => {
+          let toPrune = Math.min(number, size);
+          while (toPrune > 0) {
+            _evict();
+            toPrune--;
           }
-          if (!__privateGet(this, _isStale).call(this, index)) {
-            if (updateAgeOnHas) {
-              __privateGet(this, _updateItemAge).call(this, index);
-            }
-            if (status) {
-              status.has = "hit";
-              __privateGet(this, _statusTTL).call(this, status, index);
-            }
-            return true;
-          } else if (status) {
-            status.has = "stale";
-            __privateGet(this, _statusTTL).call(this, status, index);
+        }, "evict"),
+        /** Clears all key-value pairs from the cache. */
+        clear() {
+          if (typeof onEviction === "function") {
+            const iterator = keyMap.values();
+            for (let result = iterator.next(); !result.done; result = iterator.next())
+              onEviction(keyList[result.value], valList[result.value]);
           }
-        } else if (status) {
-          status.has = "miss";
-        }
-        return false;
-      }
-      /**
-       * Like {@link LRUCache#get} but doesn't update recency or delete stale
-       * items.
-       *
-       * Returns `undefined` if the item is stale, unless
-       * {@link LRUCache.OptionsBase.allowStale} is set.
-       */
-      peek(k, peekOptions = {}) {
-        const { allowStale = this.allowStale } = peekOptions;
-        const index = __privateGet(this, _keyMap).get(k);
-        if (index !== void 0 && (allowStale || !__privateGet(this, _isStale).call(this, index))) {
-          const v = __privateGet(this, _valList)[index];
-          return __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v) ? v.__staleWhileFetching : v;
-        }
-      }
-      async fetch(k, fetchOptions = {}) {
-        const {
-          // get options
-          allowStale = this.allowStale,
-          updateAgeOnGet = this.updateAgeOnGet,
-          noDeleteOnStaleGet = this.noDeleteOnStaleGet,
-          // set options
-          ttl = this.ttl,
-          noDisposeOnSet = this.noDisposeOnSet,
-          size = 0,
-          sizeCalculation = this.sizeCalculation,
-          noUpdateTTL = this.noUpdateTTL,
-          // fetch exclusive options
-          noDeleteOnFetchRejection = this.noDeleteOnFetchRejection,
-          allowStaleOnFetchRejection = this.allowStaleOnFetchRejection,
-          ignoreFetchAbort = this.ignoreFetchAbort,
-          allowStaleOnFetchAbort = this.allowStaleOnFetchAbort,
-          context,
-          forceRefresh = false,
-          status,
-          signal
-        } = fetchOptions;
-        if (!__privateGet(this, _hasFetchMethod)) {
-          if (status)
-            status.fetch = "get";
-          return this.get(k, {
-            allowStale,
-            updateAgeOnGet,
-            noDeleteOnStaleGet,
-            status
-          });
-        }
-        const options = {
-          allowStale,
-          updateAgeOnGet,
-          noDeleteOnStaleGet,
-          ttl,
-          noDisposeOnSet,
-          size,
-          sizeCalculation,
-          noUpdateTTL,
-          noDeleteOnFetchRejection,
-          allowStaleOnFetchRejection,
-          allowStaleOnFetchAbort,
-          ignoreFetchAbort,
-          status,
-          signal
-        };
-        let index = __privateGet(this, _keyMap).get(k);
-        if (index === void 0) {
-          if (status)
-            status.fetch = "miss";
-          const p = __privateMethod(this, _LRUCache_instances, backgroundFetch_fn).call(this, k, index, options, context);
-          return p.__returned = p;
-        } else {
-          const v = __privateGet(this, _valList)[index];
-          if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v)) {
-            const stale = allowStale && v.__staleWhileFetching !== void 0;
-            if (status) {
-              status.fetch = "inflight";
-              if (stale)
-                status.returnedStale = true;
+          keyMap.clear();
+          keyList.fill(void 0);
+          valList.fill(void 0);
+          free = [];
+          size = 0;
+          head = tail = 0;
+        },
+        /** Resizes the cache to a new maximum size, evicting items if necessary. */
+        resize: /* @__PURE__ */ __name((newMax) => {
+          if (!(Number.isInteger(newMax) && newMax > 0))
+            throw new TypeError("`max` must be a positive integer");
+          if (newMax === max)
+            return;
+          if (newMax < max) {
+            let current = tail;
+            const preserve = Math.min(size, newMax);
+            const remove = size - preserve;
+            const newKeyList = new Array(newMax);
+            const newValList = new Array(newMax);
+            const newNext = new Array(newMax);
+            const newPrev = new Array(newMax);
+            for (let i2 = 1; i2 <= remove; i2++)
+              onEviction === null || onEviction === void 0 ? void 0 : onEviction(keyList[i2], valList[i2]);
+            for (let i2 = preserve - 1; i2 >= 0; i2--) {
+              newKeyList[i2] = keyList[current];
+              newValList[i2] = valList[current];
+              newNext[i2] = i2 + 1;
+              newPrev[i2] = i2 - 1;
+              keyMap.set(newKeyList[i2], i2);
+              current = prev[current];
             }
-            return stale ? v.__staleWhileFetching : v.__returned = v;
-          }
-          const isStale = __privateGet(this, _isStale).call(this, index);
-          if (!forceRefresh && !isStale) {
-            if (status)
-              status.fetch = "hit";
-            __privateMethod(this, _LRUCache_instances, moveToTail_fn).call(this, index);
-            if (updateAgeOnGet) {
-              __privateGet(this, _updateItemAge).call(this, index);
+            head = 0;
+            tail = preserve - 1;
+            size = preserve;
+            keyList.length = newMax;
+            valList.length = newMax;
+            next.length = newMax;
+            prev.length = newMax;
+            for (let i2 = 0; i2 < preserve; i2++) {
+              keyList[i2] = newKeyList[i2];
+              valList[i2] = newValList[i2];
+              next[i2] = newNext[i2];
+              prev[i2] = newPrev[i2];
             }
-            if (status)
-              __privateGet(this, _statusTTL).call(this, status, index);
-            return v;
-          }
-          const p = __privateMethod(this, _LRUCache_instances, backgroundFetch_fn).call(this, k, index, options, context);
-          const hasStale = p.__staleWhileFetching !== void 0;
-          const staleVal = hasStale && allowStale;
-          if (status) {
-            status.fetch = isStale ? "stale" : "refresh";
-            if (staleVal && isStale)
-              status.returnedStale = true;
-          }
-          return staleVal ? p.__staleWhileFetching : p.__returned = p;
-        }
-      }
-      /**
-       * Return a value from the cache. Will update the recency of the cache
-       * entry found.
-       *
-       * If the key is not found, get() will return `undefined`.
-       */
-      get(k, getOptions = {}) {
-        const { allowStale = this.allowStale, updateAgeOnGet = this.updateAgeOnGet, noDeleteOnStaleGet = this.noDeleteOnStaleGet, status } = getOptions;
-        const index = __privateGet(this, _keyMap).get(k);
-        if (index !== void 0) {
-          const value = __privateGet(this, _valList)[index];
-          const fetching = __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, value);
-          if (status)
-            __privateGet(this, _statusTTL).call(this, status, index);
-          if (__privateGet(this, _isStale).call(this, index)) {
-            if (status)
-              status.get = "stale";
-            if (!fetching) {
-              if (!noDeleteOnStaleGet) {
-                this.delete(k);
-              }
-              if (status && allowStale)
-                status.returnedStale = true;
-              return allowStale ? value : void 0;
-            } else {
-              if (status && allowStale && value.__staleWhileFetching !== void 0) {
-                status.returnedStale = true;
-              }
-              return allowStale ? value.__staleWhileFetching : void 0;
-            }
+            free = [];
+            for (let i2 = preserve; i2 < newMax; i2++)
+              free.push(i2);
           } else {
-            if (status)
-              status.get = "hit";
-            if (fetching) {
-              return value.__staleWhileFetching;
-            }
-            __privateMethod(this, _LRUCache_instances, moveToTail_fn).call(this, index);
-            if (updateAgeOnGet) {
-              __privateGet(this, _updateItemAge).call(this, index);
-            }
-            return value;
+            const fill = newMax - max;
+            keyList.push(...new Array(fill).fill(void 0));
+            valList.push(...new Array(fill).fill(void 0));
+            next.push(...new Array(fill).fill(0));
+            prev.push(...new Array(fill).fill(0));
           }
-        } else if (status) {
-          status.get = "miss";
+          max = newMax;
+        }, "resize"),
+        /** Returns the maximum number of items that can be stored in the cache. */
+        get max() {
+          return max;
+        },
+        /** Returns the number of items currently stored in the cache. */
+        get size() {
+          return size;
+        },
+        /** Returns the number of currently available slots in the cache before reaching the maximum size. */
+        get available() {
+          return max - size;
         }
-      }
-      /**
-       * Deletes a key out of the cache.
-       * Returns true if the key was deleted, false otherwise.
-       */
-      delete(k) {
-        var _a4, _b, _c, _d2;
-        let deleted = false;
-        if (__privateGet(this, _size2) !== 0) {
-          const index = __privateGet(this, _keyMap).get(k);
-          if (index !== void 0) {
-            deleted = true;
-            if (__privateGet(this, _size2) === 1) {
-              this.clear();
-            } else {
-              __privateGet(this, _removeItemSize).call(this, index);
-              const v = __privateGet(this, _valList)[index];
-              if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v)) {
-                v.__abortController.abort(new Error("deleted"));
-              } else if (__privateGet(this, _hasDispose) || __privateGet(this, _hasDisposeAfter)) {
-                if (__privateGet(this, _hasDispose)) {
-                  (_a4 = __privateGet(this, _dispose)) == null ? void 0 : _a4.call(this, v, k, "delete");
-                }
-                if (__privateGet(this, _hasDisposeAfter)) {
-                  (_b = __privateGet(this, _disposed)) == null ? void 0 : _b.push([v, k, "delete"]);
-                }
-              }
-              __privateGet(this, _keyMap).delete(k);
-              __privateGet(this, _keyList)[index] = void 0;
-              __privateGet(this, _valList)[index] = void 0;
-              if (index === __privateGet(this, _tail)) {
-                __privateSet(this, _tail, __privateGet(this, _prev)[index]);
-              } else if (index === __privateGet(this, _head)) {
-                __privateSet(this, _head, __privateGet(this, _next)[index]);
-              } else {
-                __privateGet(this, _next)[__privateGet(this, _prev)[index]] = __privateGet(this, _next)[index];
-                __privateGet(this, _prev)[__privateGet(this, _next)[index]] = __privateGet(this, _prev)[index];
-              }
-              __privateWrapper(this, _size2)._--;
-              __privateGet(this, _free).push(index);
-            }
-          }
-        }
-        if (__privateGet(this, _hasDisposeAfter) && ((_c = __privateGet(this, _disposed)) == null ? void 0 : _c.length)) {
-          const dt = __privateGet(this, _disposed);
-          let task;
-          while (task = dt == null ? void 0 : dt.shift()) {
-            (_d2 = __privateGet(this, _disposeAfter)) == null ? void 0 : _d2.call(this, ...task);
-          }
-        }
-        return deleted;
-      }
-      /**
-       * Clear the cache entirely, throwing away all values.
-       */
-      clear() {
-        var _a4, _b, _c;
-        for (const index of __privateMethod(this, _LRUCache_instances, rindexes_fn).call(this, { allowStale: true })) {
-          const v = __privateGet(this, _valList)[index];
-          if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v)) {
-            v.__abortController.abort(new Error("deleted"));
-          } else {
-            const k = __privateGet(this, _keyList)[index];
-            if (__privateGet(this, _hasDispose)) {
-              (_a4 = __privateGet(this, _dispose)) == null ? void 0 : _a4.call(this, v, k, "delete");
-            }
-            if (__privateGet(this, _hasDisposeAfter)) {
-              (_b = __privateGet(this, _disposed)) == null ? void 0 : _b.push([v, k, "delete"]);
-            }
-          }
-        }
-        __privateGet(this, _keyMap).clear();
-        __privateGet(this, _valList).fill(void 0);
-        __privateGet(this, _keyList).fill(void 0);
-        if (__privateGet(this, _ttls) && __privateGet(this, _starts)) {
-          __privateGet(this, _ttls).fill(0);
-          __privateGet(this, _starts).fill(0);
-        }
-        if (__privateGet(this, _sizes)) {
-          __privateGet(this, _sizes).fill(0);
-        }
-        __privateSet(this, _head, 0);
-        __privateSet(this, _tail, 0);
-        __privateGet(this, _free).length = 0;
-        __privateSet(this, _calculatedSize, 0);
-        __privateSet(this, _size2, 0);
-        if (__privateGet(this, _hasDisposeAfter) && __privateGet(this, _disposed)) {
-          const dt = __privateGet(this, _disposed);
-          let task;
-          while (task = dt == null ? void 0 : dt.shift()) {
-            (_c = __privateGet(this, _disposeAfter)) == null ? void 0 : _c.call(this, ...task);
-          }
-        }
-      }
-    };
-    _max = new WeakMap();
-    _maxSize = new WeakMap();
-    _dispose = new WeakMap();
-    _disposeAfter = new WeakMap();
-    _fetchMethod = new WeakMap();
-    _size2 = new WeakMap();
-    _calculatedSize = new WeakMap();
-    _keyMap = new WeakMap();
-    _keyList = new WeakMap();
-    _valList = new WeakMap();
-    _next = new WeakMap();
-    _prev = new WeakMap();
-    _head = new WeakMap();
-    _tail = new WeakMap();
-    _free = new WeakMap();
-    _disposed = new WeakMap();
-    _sizes = new WeakMap();
-    _starts = new WeakMap();
-    _ttls = new WeakMap();
-    _hasDispose = new WeakMap();
-    _hasFetchMethod = new WeakMap();
-    _hasDisposeAfter = new WeakMap();
-    _LRUCache_instances = new WeakSet();
-    initializeTTLTracking_fn = /* @__PURE__ */ __name(function() {
-      const ttls = new ZeroArray(__privateGet(this, _max));
-      const starts = new ZeroArray(__privateGet(this, _max));
-      __privateSet(this, _ttls, ttls);
-      __privateSet(this, _starts, starts);
-      __privateSet(this, _setItemTTL, (index, ttl, start = perf.now()) => {
-        starts[index] = ttl !== 0 ? start : 0;
-        ttls[index] = ttl;
-        if (ttl !== 0 && this.ttlAutopurge) {
-          const t2 = setTimeout(() => {
-            if (__privateGet(this, _isStale).call(this, index)) {
-              this.delete(__privateGet(this, _keyList)[index]);
-            }
-          }, ttl + 1);
-          if (t2.unref) {
-            t2.unref();
-          }
-        }
-      });
-      __privateSet(this, _updateItemAge, (index) => {
-        starts[index] = ttls[index] !== 0 ? perf.now() : 0;
-      });
-      __privateSet(this, _statusTTL, (status, index) => {
-        if (ttls[index]) {
-          const ttl = ttls[index];
-          const start = starts[index];
-          status.ttl = ttl;
-          status.start = start;
-          status.now = cachedNow || getNow();
-          status.remainingTTL = status.now + ttl - start;
-        }
-      });
-      let cachedNow = 0;
-      const getNow = /* @__PURE__ */ __name(() => {
-        const n = perf.now();
-        if (this.ttlResolution > 0) {
-          cachedNow = n;
-          const t2 = setTimeout(() => cachedNow = 0, this.ttlResolution);
-          if (t2.unref) {
-            t2.unref();
-          }
-        }
-        return n;
-      }, "getNow");
-      this.getRemainingTTL = (key) => {
-        const index = __privateGet(this, _keyMap).get(key);
-        if (index === void 0) {
-          return 0;
-        }
-        return ttls[index] === 0 || starts[index] === 0 ? Infinity : starts[index] + ttls[index] - (cachedNow || getNow());
       };
-      __privateSet(this, _isStale, (index) => {
-        return ttls[index] !== 0 && starts[index] !== 0 && (cachedNow || getNow()) - starts[index] > ttls[index];
-      });
-    }, "#initializeTTLTracking");
-    _updateItemAge = new WeakMap();
-    _statusTTL = new WeakMap();
-    _setItemTTL = new WeakMap();
-    _isStale = new WeakMap();
-    initializeSizeTracking_fn = /* @__PURE__ */ __name(function() {
-      const sizes = new ZeroArray(__privateGet(this, _max));
-      __privateSet(this, _calculatedSize, 0);
-      __privateSet(this, _sizes, sizes);
-      __privateSet(this, _removeItemSize, (index) => {
-        __privateSet(this, _calculatedSize, __privateGet(this, _calculatedSize) - sizes[index]);
-        sizes[index] = 0;
-      });
-      __privateSet(this, _requireSize, (k, v, size, sizeCalculation) => {
-        if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v)) {
-          return 0;
-        }
-        if (!isPosInt(size)) {
-          if (sizeCalculation) {
-            if (typeof sizeCalculation !== "function") {
-              throw new TypeError("sizeCalculation must be a function");
-            }
-            size = sizeCalculation(v, k);
-            if (!isPosInt(size)) {
-              throw new TypeError("sizeCalculation return invalid (expect positive integer)");
-            }
-          } else {
-            throw new TypeError("invalid size value (must be positive integer). When maxSize or maxEntrySize is used, sizeCalculation or size must be set.");
-          }
-        }
-        return size;
-      });
-      __privateSet(this, _addItemSize, (index, size, status) => {
-        sizes[index] = size;
-        if (__privateGet(this, _maxSize)) {
-          const maxSize = __privateGet(this, _maxSize) - sizes[index];
-          while (__privateGet(this, _calculatedSize) > maxSize) {
-            __privateMethod(this, _LRUCache_instances, evict_fn).call(this, true);
-          }
-        }
-        __privateSet(this, _calculatedSize, __privateGet(this, _calculatedSize) + sizes[index]);
-        if (status) {
-          status.entrySize = size;
-          status.totalCalculatedSize = __privateGet(this, _calculatedSize);
-        }
-      });
-    }, "#initializeSizeTracking");
-    _removeItemSize = new WeakMap();
-    _addItemSize = new WeakMap();
-    _requireSize = new WeakMap();
-    indexes_fn = /* @__PURE__ */ __name(function* ({ allowStale = this.allowStale } = {}) {
-      if (__privateGet(this, _size2)) {
-        for (let i2 = __privateGet(this, _tail); true; ) {
-          if (!__privateMethod(this, _LRUCache_instances, isValidIndex_fn).call(this, i2)) {
-            break;
-          }
-          if (allowStale || !__privateGet(this, _isStale).call(this, i2)) {
-            yield i2;
-          }
-          if (i2 === __privateGet(this, _head)) {
-            break;
-          } else {
-            i2 = __privateGet(this, _prev)[i2];
-          }
-        }
-      }
-    }, "#indexes");
-    rindexes_fn = /* @__PURE__ */ __name(function* ({ allowStale = this.allowStale } = {}) {
-      if (__privateGet(this, _size2)) {
-        for (let i2 = __privateGet(this, _head); true; ) {
-          if (!__privateMethod(this, _LRUCache_instances, isValidIndex_fn).call(this, i2)) {
-            break;
-          }
-          if (allowStale || !__privateGet(this, _isStale).call(this, i2)) {
-            yield i2;
-          }
-          if (i2 === __privateGet(this, _tail)) {
-            break;
-          } else {
-            i2 = __privateGet(this, _next)[i2];
-          }
-        }
-      }
-    }, "#rindexes");
-    isValidIndex_fn = /* @__PURE__ */ __name(function(index) {
-      return index !== void 0 && __privateGet(this, _keyMap).get(__privateGet(this, _keyList)[index]) === index;
-    }, "#isValidIndex");
-    evict_fn = /* @__PURE__ */ __name(function(free) {
-      var _a4, _b;
-      const head = __privateGet(this, _head);
-      const k = __privateGet(this, _keyList)[head];
-      const v = __privateGet(this, _valList)[head];
-      if (__privateGet(this, _hasFetchMethod) && __privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v)) {
-        v.__abortController.abort(new Error("evicted"));
-      } else if (__privateGet(this, _hasDispose) || __privateGet(this, _hasDisposeAfter)) {
-        if (__privateGet(this, _hasDispose)) {
-          (_a4 = __privateGet(this, _dispose)) == null ? void 0 : _a4.call(this, v, k, "evict");
-        }
-        if (__privateGet(this, _hasDisposeAfter)) {
-          (_b = __privateGet(this, _disposed)) == null ? void 0 : _b.push([v, k, "evict"]);
-        }
-      }
-      __privateGet(this, _removeItemSize).call(this, head);
-      if (free) {
-        __privateGet(this, _keyList)[head] = void 0;
-        __privateGet(this, _valList)[head] = void 0;
-        __privateGet(this, _free).push(head);
-      }
-      if (__privateGet(this, _size2) === 1) {
-        __privateSet(this, _head, __privateSet(this, _tail, 0));
-        __privateGet(this, _free).length = 0;
-      } else {
-        __privateSet(this, _head, __privateGet(this, _next)[head]);
-      }
-      __privateGet(this, _keyMap).delete(k);
-      __privateWrapper(this, _size2)._--;
-      return head;
-    }, "#evict");
-    backgroundFetch_fn = /* @__PURE__ */ __name(function(k, index, options, context) {
-      const v = index === void 0 ? void 0 : __privateGet(this, _valList)[index];
-      if (__privateMethod(this, _LRUCache_instances, isBackgroundFetch_fn).call(this, v)) {
-        return v;
-      }
-      const ac = new AbortController();
-      const { signal } = options;
-      signal == null ? void 0 : signal.addEventListener("abort", () => ac.abort(signal.reason), {
-        signal: ac.signal
-      });
-      const fetchOpts = {
-        signal: ac.signal,
-        options,
-        context
-      };
-      const cb = /* @__PURE__ */ __name((v2, updateCache = false) => {
-        const { aborted } = ac.signal;
-        const ignoreAbort = options.ignoreFetchAbort && v2 !== void 0;
-        if (options.status) {
-          if (aborted && !updateCache) {
-            options.status.fetchAborted = true;
-            options.status.fetchError = ac.signal.reason;
-            if (ignoreAbort)
-              options.status.fetchAbortIgnored = true;
-          } else {
-            options.status.fetchResolved = true;
-          }
-        }
-        if (aborted && !ignoreAbort && !updateCache) {
-          return fetchFail(ac.signal.reason);
-        }
-        const bf2 = p;
-        if (__privateGet(this, _valList)[index] === p) {
-          if (v2 === void 0) {
-            if (bf2.__staleWhileFetching) {
-              __privateGet(this, _valList)[index] = bf2.__staleWhileFetching;
-            } else {
-              this.delete(k);
-            }
-          } else {
-            if (options.status)
-              options.status.fetchUpdated = true;
-            this.set(k, v2, fetchOpts.options);
-          }
-        }
-        return v2;
-      }, "cb");
-      const eb = /* @__PURE__ */ __name((er) => {
-        if (options.status) {
-          options.status.fetchRejected = true;
-          options.status.fetchError = er;
-        }
-        return fetchFail(er);
-      }, "eb");
-      const fetchFail = /* @__PURE__ */ __name((er) => {
-        const { aborted } = ac.signal;
-        const allowStaleAborted = aborted && options.allowStaleOnFetchAbort;
-        const allowStale = allowStaleAborted || options.allowStaleOnFetchRejection;
-        const noDelete = allowStale || options.noDeleteOnFetchRejection;
-        const bf2 = p;
-        if (__privateGet(this, _valList)[index] === p) {
-          const del = !noDelete || bf2.__staleWhileFetching === void 0;
-          if (del) {
-            this.delete(k);
-          } else if (!allowStaleAborted) {
-            __privateGet(this, _valList)[index] = bf2.__staleWhileFetching;
-          }
-        }
-        if (allowStale) {
-          if (options.status && bf2.__staleWhileFetching !== void 0) {
-            options.status.returnedStale = true;
-          }
-          return bf2.__staleWhileFetching;
-        } else if (bf2.__returned === bf2) {
-          throw er;
-        }
-      }, "fetchFail");
-      const pcall = /* @__PURE__ */ __name((res, rej) => {
-        var _a4;
-        const fmp = (_a4 = __privateGet(this, _fetchMethod)) == null ? void 0 : _a4.call(this, k, v, fetchOpts);
-        if (fmp && fmp instanceof Promise) {
-          fmp.then((v2) => res(v2), rej);
-        }
-        ac.signal.addEventListener("abort", () => {
-          if (!options.ignoreFetchAbort || options.allowStaleOnFetchAbort) {
-            res();
-            if (options.allowStaleOnFetchAbort) {
-              res = /* @__PURE__ */ __name((v2) => cb(v2, true), "res");
-            }
-          }
-        });
-      }, "pcall");
-      if (options.status)
-        options.status.fetchDispatched = true;
-      const p = new Promise(pcall).then(cb, eb);
-      const bf = Object.assign(p, {
-        __abortController: ac,
-        __staleWhileFetching: v,
-        __returned: void 0
-      });
-      if (index === void 0) {
-        this.set(k, bf, { ...fetchOpts.options, status: void 0 });
-        index = __privateGet(this, _keyMap).get(k);
-      } else {
-        __privateGet(this, _valList)[index] = bf;
-      }
-      return bf;
-    }, "#backgroundFetch");
-    isBackgroundFetch_fn = /* @__PURE__ */ __name(function(p) {
-      if (!__privateGet(this, _hasFetchMethod))
-        return false;
-      const b = p;
-      return !!b && b instanceof Promise && b.hasOwnProperty("__staleWhileFetching") && b.__abortController instanceof AbortController;
-    }, "#isBackgroundFetch");
-    connect_fn = /* @__PURE__ */ __name(function(p, n) {
-      __privateGet(this, _prev)[n] = p;
-      __privateGet(this, _next)[p] = n;
-    }, "#connect");
-    moveToTail_fn = /* @__PURE__ */ __name(function(index) {
-      if (index !== __privateGet(this, _tail)) {
-        if (index === __privateGet(this, _head)) {
-          __privateSet(this, _head, __privateGet(this, _next)[index]);
-        } else {
-          __privateMethod(this, _LRUCache_instances, connect_fn).call(this, __privateGet(this, _prev)[index], __privateGet(this, _next)[index]);
-        }
-        __privateMethod(this, _LRUCache_instances, connect_fn).call(this, __privateGet(this, _tail), index);
-        __privateSet(this, _tail, index);
-      }
-    }, "#moveToTail");
-    __name(_LRUCache, "LRUCache");
-    var LRUCache = _LRUCache;
-    exports2.LRUCache = LRUCache;
-    exports2.default = LRUCache;
+    }, "createLRU");
+    exports2.createLRU = createLRU;
   }
 });
 
-// node_modules/.pnpm/lru-cache@8.0.5/node_modules/lru-cache/dist/cjs/index-cjs.js
-var require_index_cjs = __commonJS({
-  "node_modules/.pnpm/lru-cache@8.0.5/node_modules/lru-cache/dist/cjs/index-cjs.js"(exports2, module2) {
-    "use strict";
-    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
-    var index_js_1 = __importDefault(require_cjs());
-    module2.exports = Object.assign(index_js_1.default, { default: index_js_1.default, LRUCache: index_js_1.default });
-  }
-});
-
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/errors.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/errors.js
 var require_errors = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/errors.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/errors.js"(exports2) {
     "use strict";
     exports2.EE_CANTCREATEFILE = 1;
     exports2.EE_READ = 2;
@@ -11097,7 +10058,7 @@ var require_streams = __commonJS({
 });
 
 // node_modules/.pnpm/iconv-lite@0.6.3/node_modules/iconv-lite/lib/index.js
-var require_lib = __commonJS({
+var require_lib2 = __commonJS({
   "node_modules/.pnpm/iconv-lite@0.6.3/node_modules/iconv-lite/lib/index.js"(exports2, module2) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
@@ -11216,13 +10177,13 @@ var require_lib = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/string.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/string.js
 var require_string = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/string.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/string.js"(exports2) {
     "use strict";
-    var Iconv = require_lib();
-    var LRU = require_index_cjs().default;
-    var decoderCache = new LRU({
+    var Iconv = require_lib2();
+    var { createLRU } = require_lib();
+    var decoderCache = createLRU({
       max: 500
     });
     exports2.decode = function(buffer, encoding, start, end, options) {
@@ -11261,9 +10222,9 @@ var require_string = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/packet.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/packet.js
 var require_packet = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/packet.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/packet.js"(exports2, module2) {
     "use strict";
     var ErrorCodeToName = require_errors();
     var NativeBuffer = require("buffer").Buffer;
@@ -12048,9 +11009,9 @@ var require_packet = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packet_parser.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packet_parser.js
 var require_packet_parser = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packet_parser.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packet_parser.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var MAX_PACKET_LENGTH = 16777215;
@@ -12218,9 +11179,9 @@ var require_packet_parser = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_next_factor.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_next_factor.js
 var require_auth_next_factor = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_next_factor.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_next_factor.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var _AuthNextFactor = class _AuthNextFactor {
@@ -12254,9 +11215,9 @@ var require_auth_next_factor = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_switch_request.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_switch_request.js
 var require_auth_switch_request = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_switch_request.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_switch_request.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var _AuthSwitchRequest = class _AuthSwitchRequest {
@@ -12290,9 +11251,9 @@ var require_auth_switch_request = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_switch_request_more_data.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_switch_request_more_data.js
 var require_auth_switch_request_more_data = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_switch_request_more_data.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_switch_request_more_data.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var _AuthSwitchRequestMoreData = class _AuthSwitchRequestMoreData {
@@ -12323,9 +11284,9 @@ var require_auth_switch_request_more_data = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_switch_response.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_switch_response.js
 var require_auth_switch_response = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/auth_switch_response.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/auth_switch_response.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var _AuthSwitchResponse = class _AuthSwitchResponse {
@@ -12354,9 +11315,9 @@ var require_auth_switch_response = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/types.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/types.js
 var require_types = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/types.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/types.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       0: "DECIMAL",
@@ -12447,9 +11408,9 @@ var require_types = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/binary_row.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/binary_row.js
 var require_binary_row = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/binary_row.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/binary_row.js"(exports2, module2) {
     "use strict";
     var Types = require_types();
     var Packet = require_packet();
@@ -12535,9 +11496,9 @@ var require_binary_row = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/commands.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/commands.js
 var require_commands = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/commands.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/commands.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       SLEEP: 0,
@@ -12583,9 +11544,9 @@ var require_commands = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/binlog_dump.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/binlog_dump.js
 var require_binlog_dump = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/binlog_dump.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/binlog_dump.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var CommandCodes = require_commands();
@@ -12615,9 +11576,9 @@ var require_binlog_dump = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/client.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/client.js
 var require_client = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/client.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/client.js"(exports2) {
     "use strict";
     exports2.LONG_PASSWORD = 1;
     exports2.FOUND_ROWS = 2;
@@ -12650,9 +11611,9 @@ var require_client = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_41.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_41.js
 var require_auth_41 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_41.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_41.js"(exports2) {
     "use strict";
     var crypto = require("crypto");
     function sha1(msg, msg1, msg2) {
@@ -12713,9 +11674,9 @@ var require_auth_41 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/charset_encodings.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/charset_encodings.js
 var require_charset_encodings = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/charset_encodings.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/charset_encodings.js"(exports2, module2) {
     "use strict";
     module2.exports = [
       "utf8",
@@ -13031,9 +11992,9 @@ var require_charset_encodings = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/change_user.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/change_user.js
 var require_change_user = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/change_user.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/change_user.js"(exports2, module2) {
     "use strict";
     var CommandCode = require_commands();
     var ClientConstants = require_client();
@@ -13128,9 +12089,9 @@ var require_change_user = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/close_statement.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/close_statement.js
 var require_close_statement = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/close_statement.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/close_statement.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var CommandCodes = require_commands();
@@ -13153,9 +12114,9 @@ var require_close_statement = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/field_flags.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/field_flags.js
 var require_field_flags = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/field_flags.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/field_flags.js"(exports2) {
     "use strict";
     exports2.NOT_NULL = 1;
     exports2.PRI_KEY = 2;
@@ -13175,9 +12136,9 @@ var require_field_flags = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/column_definition.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/column_definition.js
 var require_column_definition = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/column_definition.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/column_definition.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var StringParser = require_string();
@@ -13420,9 +12381,9 @@ var require_column_definition = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/cursor.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/cursor.js
 var require_cursor = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/cursor.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/cursor.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       NO_CURSOR: 0,
@@ -13433,9 +12394,9 @@ var require_cursor = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/execute.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/execute.js
 var require_execute = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/execute.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/execute.js"(exports2, module2) {
     "use strict";
     var CursorType = require_cursor();
     var CommandCodes = require_commands();
@@ -13603,9 +12564,9 @@ var require_execute = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/handshake.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/handshake.js
 var require_handshake = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/handshake.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/handshake.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var ClientConstants = require_client();
@@ -13707,9 +12668,9 @@ var require_handshake = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/handshake_response.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/handshake_response.js
 var require_handshake_response = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/handshake_response.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/handshake_response.js"(exports2, module2) {
     "use strict";
     var ClientConstants = require_client();
     var CharsetToEncoding = require_charset_encodings();
@@ -13850,9 +12811,9 @@ var require_handshake_response = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/prepare_statement.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/prepare_statement.js
 var require_prepare_statement = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/prepare_statement.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/prepare_statement.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var CommandCodes = require_commands();
@@ -13881,9 +12842,9 @@ var require_prepare_statement = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/prepared_statement_header.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/prepared_statement_header.js
 var require_prepared_statement_header = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/prepared_statement_header.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/prepared_statement_header.js"(exports2, module2) {
     "use strict";
     var _PreparedStatementHeader = class _PreparedStatementHeader {
       constructor(packet) {
@@ -13901,9 +12862,9 @@ var require_prepared_statement_header = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/query.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/query.js
 var require_query = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/query.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/query.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var CommandCode = require_commands();
@@ -13932,9 +12893,9 @@ var require_query = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/register_slave.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/register_slave.js
 var require_register_slave = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/register_slave.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/register_slave.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var CommandCodes = require_commands();
@@ -13974,9 +12935,9 @@ var require_register_slave = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/server_status.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/server_status.js
 var require_server_status = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/server_status.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/server_status.js"(exports2) {
     "use strict";
     exports2.SERVER_STATUS_IN_TRANS = 1;
     exports2.SERVER_STATUS_AUTOCOMMIT = 2;
@@ -13995,9 +12956,9 @@ var require_server_status = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/encoding_charset.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/encoding_charset.js
 var require_encoding_charset = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/encoding_charset.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/encoding_charset.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       big5: 1,
@@ -14046,9 +13007,9 @@ var require_encoding_charset = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/session_track.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/session_track.js
 var require_session_track = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/session_track.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/session_track.js"(exports2) {
     "use strict";
     exports2.SYSTEM_VARIABLES = 0;
     exports2.SCHEMA = 1;
@@ -14061,9 +13022,9 @@ var require_session_track = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/resultset_header.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/resultset_header.js
 var require_resultset_header = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/resultset_header.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/resultset_header.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var ClientConstants = require_client();
@@ -14173,9 +13134,9 @@ var require_resultset_header = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/ssl_request.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/ssl_request.js
 var require_ssl_request = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/ssl_request.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/ssl_request.js"(exports2, module2) {
     "use strict";
     var ClientConstants = require_client();
     var Packet = require_packet();
@@ -14202,9 +13163,9 @@ var require_ssl_request = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/text_row.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/text_row.js
 var require_text_row = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/text_row.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/text_row.js"(exports2, module2) {
     "use strict";
     var Packet = require_packet();
     var _TextRow = class _TextRow {
@@ -14251,9 +13212,9 @@ var require_text_row = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/index.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/index.js
 var require_packets = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/index.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/index.js"(exports2, module2) {
     "use strict";
     var process2 = require("process");
     var AuthNextFactor = require_auth_next_factor();
@@ -14387,9 +13348,9 @@ var require_packets = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/command.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/command.js
 var require_command = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/command.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/command.js"(exports2, module2) {
     "use strict";
     var EventEmitter = require("events").EventEmitter;
     var Timers = require("timers");
@@ -14443,9 +13404,9 @@ var require_command = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/sha256_password.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/sha256_password.js
 var require_sha256_password = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/sha256_password.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/sha256_password.js"(exports2, module2) {
     "use strict";
     var PLUGIN_NAME = "sha256_password";
     var crypto = require("crypto");
@@ -14498,9 +13459,9 @@ var require_sha256_password = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/caching_sha2_password.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/caching_sha2_password.js
 var require_caching_sha2_password = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/caching_sha2_password.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/caching_sha2_password.js"(exports2, module2) {
     "use strict";
     var PLUGIN_NAME = "caching_sha2_password";
     var crypto = require("crypto");
@@ -14592,9 +13553,9 @@ var require_caching_sha2_password = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/mysql_native_password.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/mysql_native_password.js
 var require_mysql_native_password = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/mysql_native_password.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/mysql_native_password.js"(exports2, module2) {
     "use strict";
     var auth41 = require_auth_41();
     module2.exports = (pluginOptions) => ({ connection, command }) => {
@@ -14623,9 +13584,9 @@ var require_mysql_native_password = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/mysql_clear_password.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/mysql_clear_password.js
 var require_mysql_clear_password = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/mysql_clear_password.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/mysql_clear_password.js"(exports2, module2) {
     "use strict";
     function bufferFromStr(str) {
       return Buffer.from(`${str}\0`);
@@ -14641,9 +13602,9 @@ var require_mysql_clear_password = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/auth_switch.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/auth_switch.js
 var require_auth_switch = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/auth_switch.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/auth_switch.js"(exports2, module2) {
     "use strict";
     var Packets = require_packets();
     var sha256_password = require_sha256_password();
@@ -14857,9 +13818,9 @@ var require_seq_queue2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/compressed_protocol.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/compressed_protocol.js
 var require_compressed_protocol = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/compressed_protocol.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/compressed_protocol.js"(exports2, module2) {
     "use strict";
     var zlib2 = require("zlib");
     var PacketParser = require_packet_parser();
@@ -14962,9 +13923,9 @@ var require_compressed_protocol = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/client_handshake.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/client_handshake.js
 var require_client_handshake = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/client_handshake.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/client_handshake.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var Packets = require_packets();
@@ -15151,9 +14112,9 @@ var require_client_handshake = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/server_handshake.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/server_handshake.js
 var require_server_handshake = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/server_handshake.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/server_handshake.js"(exports2, module2) {
     "use strict";
     var CommandCode = require_commands();
     var Errors = require_errors();
@@ -15303,9 +14264,9 @@ var require_server_handshake = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/charsets.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/charsets.js
 var require_charsets = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/charsets.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/charsets.js"(exports2) {
     "use strict";
     exports2.BIG5_CHINESE_CI = 1;
     exports2.LATIN2_CZECH_CS = 2;
@@ -15623,9 +14584,9 @@ var require_charsets = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/helpers.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/helpers.js
 var require_helpers = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/helpers.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/helpers.js"(exports2) {
     "use strict";
     function srcEscape(str) {
       return JSON.stringify({
@@ -15857,12 +14818,12 @@ var require_generate_function = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/parser_cache.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/parser_cache.js
 var require_parser_cache = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/parser_cache.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/parser_cache.js"(exports2, module2) {
     "use strict";
-    var LRU = require_index_cjs().default;
-    var parserCache = new LRU({
+    var { createLRU } = require_lib();
+    var parserCache = createLRU({
       max: 15e3
     });
     function keyFromFields(type, fields, options, config) {
@@ -15905,7 +14866,7 @@ var require_parser_cache = __commonJS({
     }
     __name(getParser, "getParser");
     function setMaxCache(max) {
-      parserCache = new LRU({ max });
+      parserCache.resize(max);
     }
     __name(setMaxCache, "setMaxCache");
     function clearCache() {
@@ -15921,9 +14882,9 @@ var require_parser_cache = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/text_parser.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/text_parser.js
 var require_text_parser = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/text_parser.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/text_parser.js"(exports2, module2) {
     "use strict";
     var Types = require_types();
     var Charsets = require_charsets();
@@ -16109,9 +15070,9 @@ var require_text_parser = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/query.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/query.js
 var require_query2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/query.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/query.js"(exports2, module2) {
     "use strict";
     var process2 = require("process");
     var Timers = require("timers");
@@ -16402,9 +15363,9 @@ var require_query2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/close_statement.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/close_statement.js
 var require_close_statement2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/close_statement.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/close_statement.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var Packets = require_packets();
@@ -16424,9 +15385,9 @@ var require_close_statement2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/binary_parser.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/binary_parser.js
 var require_binary_parser = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/parsers/binary_parser.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/parsers/binary_parser.js"(exports2, module2) {
     "use strict";
     var FieldFlags = require_field_flags();
     var Charsets = require_charsets();
@@ -16621,9 +15582,9 @@ var require_binary_parser = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/execute.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/execute.js
 var require_execute2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/execute.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/execute.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var Query = require_query2();
@@ -16714,9 +15675,9 @@ var require_execute2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/prepare.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/prepare.js
 var require_prepare = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/prepare.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/prepare.js"(exports2, module2) {
     "use strict";
     var Packets = require_packets();
     var Command = require_command();
@@ -16850,9 +15811,9 @@ var require_prepare = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/ping.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/ping.js
 var require_ping = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/ping.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/ping.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var CommandCode = require_commands();
@@ -16885,9 +15846,9 @@ var require_ping = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/register_slave.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/register_slave.js
 var require_register_slave2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/register_slave.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/register_slave.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var Packets = require_packets();
@@ -16915,9 +15876,9 @@ var require_register_slave2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/binlog_query_statusvars.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/binlog_query_statusvars.js
 var require_binlog_query_statusvars = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/packets/binlog_query_statusvars.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/packets/binlog_query_statusvars.js"(exports2, module2) {
     "use strict";
     var keys = {
       FLAGS2: 0,
@@ -17027,9 +15988,9 @@ var require_binlog_query_statusvars = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/binlog_dump.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/binlog_dump.js
 var require_binlog_dump2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/binlog_dump.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/binlog_dump.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var Packets = require_packets();
@@ -17136,9 +16097,9 @@ var require_binlog_dump2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/change_user.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/change_user.js
 var require_change_user2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/change_user.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/change_user.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var Packets = require_packets();
@@ -17193,9 +16154,9 @@ var require_change_user2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/quit.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/quit.js
 var require_quit = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/quit.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/quit.js"(exports2, module2) {
     "use strict";
     var Command = require_command();
     var CommandCode = require_commands();
@@ -17226,9 +16187,9 @@ var require_quit = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/index.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/index.js
 var require_commands2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/commands/index.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/commands/index.js"(exports2, module2) {
     "use strict";
     var ClientHandshake = require_client_handshake();
     var ServerHandshake = require_server_handshake();
@@ -17257,12 +16218,12 @@ var require_commands2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/package.json
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/package.json
 var require_package = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/package.json"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/package.json"(exports2, module2) {
     module2.exports = {
       name: "mysql2",
-      version: "3.11.0",
+      version: "3.11.3",
       description: "fast mysql driver. Implements core protocol, prepared statements, ssl and compression in native JS",
       main: "index.js",
       typings: "typings/mysql/index",
@@ -17325,13 +16286,13 @@ var require_package = __commonJS({
         "generate-function": "^2.3.1",
         "iconv-lite": "^0.6.3",
         long: "^5.2.1",
-        "lru-cache": "^8.0.0",
+        "lru.min": "^1.0.0",
         "named-placeholders": "^1.1.3",
         "seq-queue": "^0.0.5",
         sqlstring: "^2.3.2"
       },
       devDependencies: {
-        "@types/node": "^20.0.0",
+        "@types/node": "^22.0.0",
         "@typescript-eslint/eslint-plugin": "^5.42.1",
         "@typescript-eslint/parser": "^5.42.1",
         "assert-diff": "^3.0.2",
@@ -17353,9 +16314,9 @@ var require_package = __commonJS({
   }
 });
 
-// node_modules/.pnpm/aws-ssl-profiles@1.1.1/node_modules/aws-ssl-profiles/lib/profiles/ca/defaults.js
+// node_modules/.pnpm/aws-ssl-profiles@1.1.2/node_modules/aws-ssl-profiles/lib/profiles/ca/defaults.js
 var require_defaults = __commonJS({
-  "node_modules/.pnpm/aws-ssl-profiles@1.1.1/node_modules/aws-ssl-profiles/lib/profiles/ca/defaults.js"(exports2) {
+  "node_modules/.pnpm/aws-ssl-profiles@1.1.2/node_modules/aws-ssl-profiles/lib/profiles/ca/defaults.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.defaults = void 0;
@@ -17479,9 +16440,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// node_modules/.pnpm/aws-ssl-profiles@1.1.1/node_modules/aws-ssl-profiles/lib/profiles/ca/proxies.js
+// node_modules/.pnpm/aws-ssl-profiles@1.1.2/node_modules/aws-ssl-profiles/lib/profiles/ca/proxies.js
 var require_proxies = __commonJS({
-  "node_modules/.pnpm/aws-ssl-profiles@1.1.1/node_modules/aws-ssl-profiles/lib/profiles/ca/proxies.js"(exports2) {
+  "node_modules/.pnpm/aws-ssl-profiles@1.1.2/node_modules/aws-ssl-profiles/lib/profiles/ca/proxies.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.proxies = void 0;
@@ -17495,9 +16456,9 @@ var require_proxies = __commonJS({
   }
 });
 
-// node_modules/.pnpm/aws-ssl-profiles@1.1.1/node_modules/aws-ssl-profiles/lib/index.js
-var require_lib2 = __commonJS({
-  "node_modules/.pnpm/aws-ssl-profiles@1.1.1/node_modules/aws-ssl-profiles/lib/index.js"(exports2, module2) {
+// node_modules/.pnpm/aws-ssl-profiles@1.1.2/node_modules/aws-ssl-profiles/lib/index.js
+var require_lib3 = __commonJS({
+  "node_modules/.pnpm/aws-ssl-profiles@1.1.2/node_modules/aws-ssl-profiles/lib/index.js"(exports2, module2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var defaults_js_1 = require_defaults();
@@ -17508,26 +16469,26 @@ var require_lib2 = __commonJS({
     var profiles = {
       ca: [...defaults_js_1.defaults, ...proxies_js_1.proxies]
     };
-    exports2.default = profiles;
     module2.exports = profiles;
     module2.exports.proxyBundle = proxyBundle;
+    module2.exports.default = profiles;
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/ssl_profiles.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/ssl_profiles.js
 var require_ssl_profiles = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/constants/ssl_profiles.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/constants/ssl_profiles.js"(exports2) {
     "use strict";
-    var awsCaBundle = require_lib2();
+    var awsCaBundle = require_lib3();
     exports2["Amazon RDS"] = {
       ca: awsCaBundle.ca
     };
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/connection_config.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/connection_config.js
 var require_connection_config = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/connection_config.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/connection_config.js"(exports2, module2) {
     "use strict";
     var { URL: URL2 } = require("url");
     var ClientConstants = require_client();
@@ -17767,9 +16728,9 @@ var require_connection_config = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/connection.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/connection.js
 var require_connection = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/connection.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/connection.js"(exports2, module2) {
     "use strict";
     var Net = require("net");
     var Tls = require("tls");
@@ -17778,7 +16739,7 @@ var require_connection = __commonJS({
     var Readable = require("stream").Readable;
     var Queue = require_denque();
     var SqlString = require_sqlstring();
-    var LRU = require_index_cjs().default;
+    var { createLRU } = require_lib();
     var PacketParser = require_packet_parser();
     var Packets = require_packets();
     var Commands = require_commands2();
@@ -17814,11 +16775,11 @@ var require_connection = __commonJS({
         this._command = null;
         this._paused = false;
         this._paused_packets = new Queue();
-        this._statements = new LRU({
+        this._statements = createLRU({
           max: this.config.maxPreparedStatements,
-          dispose: /* @__PURE__ */ __name(function(statement) {
+          onEviction: /* @__PURE__ */ __name(function(_, statement) {
             statement.close();
-          }, "dispose")
+          }, "onEviction")
         });
         this.serverCapabilityFlags = 0;
         this.authorized = false;
@@ -18531,9 +17492,9 @@ var require_connection = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool_connection.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool_connection.js
 var require_pool_connection = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool_connection.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool_connection.js"(exports2, module2) {
     "use strict";
     var Connection = require_mysql2().Connection;
     var _PoolConnection = class _PoolConnection extends Connection {
@@ -18588,9 +17549,9 @@ var require_pool_connection = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool.js
 var require_pool = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool.js"(exports2, module2) {
     "use strict";
     var process2 = require("process");
     var mysql = require_mysql2();
@@ -18768,7 +17729,7 @@ var require_pool = __commonJS({
         }
         this._removeIdleTimeoutConnectionsTimer = setTimeout(() => {
           try {
-            while (this._freeConnections.length > this.config.maxIdle && Date.now() - this._freeConnections.get(0).lastActiveTime > this.config.idleTimeout) {
+            while (this._freeConnections.length > this.config.maxIdle || this._freeConnections.length > 0 && Date.now() - this._freeConnections.get(0).lastActiveTime > this.config.idleTimeout) {
               this._freeConnections.get(0).destroy();
             }
           } finally {
@@ -18801,9 +17762,9 @@ var require_pool = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool_config.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool_config.js
 var require_pool_config = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool_config.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool_config.js"(exports2, module2) {
     "use strict";
     var ConnectionConfig = require_connection_config();
     var _PoolConfig = class _PoolConfig {
@@ -18825,9 +17786,9 @@ var require_pool_config = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool_cluster.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool_cluster.js
 var require_pool_cluster = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/pool_cluster.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/pool_cluster.js"(exports2, module2) {
     "use strict";
     var process2 = require("process");
     var Pool = require_pool();
@@ -19079,9 +18040,9 @@ var require_pool_cluster = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/server.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/server.js
 var require_server = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/server.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/server.js"(exports2, module2) {
     "use strict";
     var net = require("net");
     var EventEmitter = require("events").EventEmitter;
@@ -19116,9 +18077,9 @@ var require_server = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/index.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/index.js
 var require_auth_plugins = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/lib/auth_plugins/index.js"(exports2, module2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/lib/auth_plugins/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       caching_sha2_password: require_caching_sha2_password(),
@@ -19129,9 +18090,9 @@ var require_auth_plugins = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/index.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/index.js
 var require_mysql2 = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/index.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/index.js"(exports2) {
     "use strict";
     var SqlString = require_sqlstring();
     var Connection = require_connection();
@@ -19200,9 +18161,9 @@ var require_mysql2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/promise.js
+// node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/promise.js
 var require_promise = __commonJS({
-  "node_modules/.pnpm/mysql2@3.11.0/node_modules/mysql2/promise.js"(exports2) {
+  "node_modules/.pnpm/mysql2@3.11.3/node_modules/mysql2/promise.js"(exports2) {
     "use strict";
     var core = require_mysql2();
     var EventEmitter = require("events").EventEmitter;
@@ -19610,10 +18571,10 @@ var require_promise = __commonJS({
         this.Promise = thePromise || Promise;
         inheritEvents(poolCluster, this, ["warn", "remove"]);
       }
-      getConnection() {
+      getConnection(pattern, selector) {
         const corePoolCluster = this.poolCluster;
         return new this.Promise((resolve, reject) => {
-          corePoolCluster.getConnection((err, coreConnection) => {
+          corePoolCluster.getConnection(pattern, selector, (err, coreConnection) => {
             if (err) {
               reject(err);
             } else {
@@ -26728,6 +25689,34 @@ __name(sleep, "sleep");
 
 // src/database/pool.ts
 var import_promise = __toESM(require_promise(), 1);
+var pool;
+var dbVersion = "";
+async function createConnectionPool() {
+  const config = getConnectionOptions();
+  try {
+    const dbPool = (0, import_promise.createPool)(config);
+    dbPool.on("connection", (connection) => {
+      connection.query(mysql_transaction_isolation_level);
+    });
+    const [result] = await dbPool.query("SELECT VERSION() as version");
+    dbVersion = `^5[${result[0].version}]`;
+    console.log(`${dbVersion} ^2Database server connection established!^0`);
+    if (config.multipleStatements) {
+      console.warn(`multipleStatements is enabled. Used incorrectly, this option may cause SQL injection.`);
+    }
+    pool = dbPool;
+  } catch (err) {
+    const message = err.message.includes("auth_gssapi_client") ? `Requested authentication using unknown plugin auth_gssapi_client.` : err.message;
+    console.log(
+      `^3Unable to establish a connection to the database (${err.code})!
+^1Error${err.errno ? ` ${err.errno}` : ""}: ${message}^0`
+    );
+    console.log(`See https://github.com/overextended/oxmysql/issues/154 for more information.`);
+    if (config.password) config.password = "******";
+    console.log(config);
+  }
+}
+__name(createConnectionPool, "createConnectionPool");
 
 // src/utils/scheduleTick.ts
 var resourceName = GetCurrentResourceName();
@@ -26785,71 +25774,34 @@ async function getConnection(connectionId) {
 }
 __name(getConnection, "getConnection");
 
-// src/database/pool.ts
-var pool;
-var dbVersion = "";
-async function createConnectionPool() {
-  const config = getConnectionOptions();
-  try {
-    var _stack = [];
-    try {
-      pool = (0, import_promise.createPool)(config);
-      pool.on("connection", (connection) => {
-        connection.query(mysql_transaction_isolation_level);
-      });
-      const conn = __using(_stack, await getConnection());
-      const result = await conn.query("SELECT VERSION() as version");
-      dbVersion = `^5[${result[0].version}]`;
-      console.log(`${dbVersion} ^2Database server connection established!^0`);
-      if (config.multipleStatements) {
-        console.warn(`multipleStatements is enabled. Used incorrectly, this option may cause SQL injection.
-See https://github.com/overextended/oxmysql/issues/102)`);
-      }
-    } catch (_) {
-      var _error = _, _hasError = true;
-    } finally {
-      __callDispose(_stack, _error, _hasError);
-    }
-  } catch (err) {
-    const message = err.message.includes("auth_gssapi_client") ? `Server requests authentication using unknown plugin auth_gssapi_client.
-See https://github.com/overextended/oxmysql/issues/213.` : err.message;
-    console.log(
-      `^3Unable to establish a connection to the database (${err.code})!
-^1Error${err.errno ? ` ${err.errno}` : ""}: ${message}^0`
-    );
-    if (config.password) config.password = "******";
-    console.log(config);
-  }
-}
-__name(createConnectionPool, "createConnectionPool");
-
 // src/utils/parseArguments.ts
 var parseArguments = /* @__PURE__ */ __name((query, parameters) => {
+  var _a4;
   if (typeof query !== "string") throw new Error(`Expected query to be a string but received ${typeof query} instead.`);
   if (convertNamedPlaceholders && parameters && typeof parameters === "object" && !Array.isArray(parameters)) {
     if (query.includes(":") || query.includes("@")) {
-      const placeholders = convertNamedPlaceholders(query, parameters);
-      query = placeholders[0];
-      parameters = placeholders[1];
+      [query, parameters] = convertNamedPlaceholders(query, parameters);
     }
   }
   if (!parameters || typeof parameters === "function") parameters = [];
+  const placeholders = ((_a4 = query.match(/\?(?!\?)/g)) == null ? void 0 : _a4.length) ?? 0;
   if (parameters && !Array.isArray(parameters)) {
     let arr = [];
-    Object.entries(parameters).forEach((entry) => arr[parseInt(entry[0]) - 1] = entry[1]);
+    for (let i2 = 0; i2 < placeholders; i2++) {
+      arr[i2] = parameters[i2 + 1] ?? null;
+    }
     parameters = arr;
   } else {
-    const queryParams = query.match(/\?(?!\?)/g);
-    if (queryParams !== null) {
+    if (placeholders) {
       if (parameters.length === 0) {
-        for (let i2 = 0; i2 < queryParams.length; i2++) parameters[i2] = null;
+        for (let i2 = 0; i2 < placeholders; i2++) parameters[i2] = null;
         return [query, parameters];
       }
-      const diff = queryParams.length - parameters.length;
+      const diff = placeholders - parameters.length;
       if (diff > 0) {
-        for (let i2 = 0; i2 < diff; i2++) parameters[queryParams.length + i2] = null;
+        for (let i2 = 0; i2 < diff; i2++) parameters[placeholders + i2] = null;
       } else if (diff < 0) {
-        throw new Error(`Expected ${queryParams.length} parameters, but received ${parameters.length}.`);
+        throw new Error(`Expected ${placeholders} parameters, but received ${parameters.length}.`);
       }
     }
   }
@@ -26880,8 +25832,18 @@ var parseResponse = /* @__PURE__ */ __name((type, result) => {
 }, "parseResponse");
 
 // src/logger/index.ts
+var loggerResource = "";
 var loggerService = GetConvar("mysql_logger_service", "");
-var logger = new Function(LoadResourceFile("oxmysql", `logger/${loggerService}.js`))() || (() => {
+if (loggerService) {
+  if (loggerService.startsWith("@")) {
+    const [resource, ...path] = loggerService.slice(1).split("/");
+    if (resource && path) {
+      loggerResource = resource;
+      loggerService = path.join("/");
+    }
+  } else loggerService = `logger/${loggerService}`;
+}
+var logger = loggerService && new Function(LoadResourceFile(loggerResource || GetCurrentResourceName(), `${loggerService}.js`))() || (() => {
 });
 function logError(invokingResource, cb, isPromise, err = "", query, parameters, includeParameters) {
   const message = typeof err === "object" ? err.message : err.replace(/SCRIPT ERROR: citizen:[\w\/\.]+:\d+[:\s]+/, "");
@@ -26903,7 +25865,13 @@ ${message}`;
     message,
     metadata: err
   });
-  if (cb && isPromise) return cb(null, output);
+  if (cb && isPromise) {
+    try {
+      return cb(null, output);
+    } catch (e2) {
+    }
+    return;
+  }
   console.error(output);
 }
 __name(logError, "logError");
@@ -27407,12 +26375,10 @@ MySQL.insert = (query, parameters, cb, invokingResource = GetInvokingResource(),
 MySQL.transaction = (queries, parameters, cb, invokingResource = GetInvokingResource(), isPromise) => {
   rawTransaction(invokingResource, queries, parameters, cb, isPromise);
 };
-global.exports(
-  "experimentalTransaction",
-  async (transactions, cb, invokingResource = GetInvokingResource(), isPromise) => {
-    return await startTransaction(invokingResource, transactions, cb, isPromise);
-  }
-);
+MySQL.startTransaction = (transactions, invokingResource = GetInvokingResource()) => {
+  console.warn(`MySQL.startTransaction is "experimental" and may receive breaking changes.`);
+  return startTransaction(invokingResource, transactions, void 0, true);
+};
 MySQL.prepare = (query, parameters, cb, invokingResource = GetInvokingResource(), isPromise) => {
   rawExecute(invokingResource, query, parameters, cb, isPromise, true);
 };

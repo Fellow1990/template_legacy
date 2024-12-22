@@ -51,6 +51,8 @@ local Inventory
 CreateThread(function()
 	Inventory = require 'modules.inventory.server'
 
+    if not lib then return end
+
 	if shared.framework == 'esx' then
 		local success, items = pcall(MySQL.query.await, 'SELECT * FROM items')
 
@@ -332,6 +334,8 @@ function Items.UpdateDurability(inv, slot, item, value, ostime)
     }, true)
 end
 
+---@deprecated
+---Use the 'ox_inventory:usedItem' event or the 'usingItem' or 'buyItem' hooks
 local function Item(name, cb)
 	local item = ItemList[name]
 
