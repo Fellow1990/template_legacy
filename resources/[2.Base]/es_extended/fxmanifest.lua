@@ -3,7 +3,7 @@ fx_version 'cerulean'
 game 'gta5'
 description 'The Core resource that provides the functionalities for all other resources.'
 lua54 'yes'
-version '1.11.4'
+version '1.12.2'
 
 shared_scripts {
 	'locale.lua',
@@ -34,19 +34,19 @@ server_scripts {
 	'server/modules/commands.lua',
 
 	'server/bridge/**/*.lua',
-	'server/modules/actions.lua',
 	'server/modules/npwd.lua',
 	'server/modules/createJob.lua'
 }
 
 client_scripts {
-    'client/common.lua',
+    'client/main.lua',
 	'client/functions.lua',
 	'client/modules/wrapper.lua',
 	'client/modules/callback.lua',
     'client/modules/adjustments.lua',
+	'client/modules/points.lua',
 
-	'client/main.lua',
+	'client/modules/events.lua',
 
 	'client/modules/actions.lua',
 	'client/modules/death.lua',
@@ -73,6 +73,7 @@ files {
 
 	'html/fonts/pdown.ttf',
 	'html/fonts/bankgothic.ttf',
+    "client/imports/*.lua",
 }
 
 dependencies {

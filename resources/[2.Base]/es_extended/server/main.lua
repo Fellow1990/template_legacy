@@ -102,7 +102,7 @@ if not Config.Multichar then
         Wait(0) -- Required
         local identifier = ESX.GetIdentifier(playerId)
 
-
+        -- luacheck: ignore
         if not SetEntityOrphanMode then
             return deferrals.done(("[ESX] ESX Requires a minimum Artifact version of 10188, Please update your server."))
         end
@@ -318,10 +318,10 @@ AddEventHandler("playerDropped", function(reason)
     if xPlayer then
         TriggerEvent("esx:playerDropped", playerId, reason)
         local job = xPlayer.getJob().name
-        local currentJob = ESX.JobsPlayerCount[job]
-        ESX.JobsPlayerCount[job] = ((currentJob and currentJob > 0) and currentJob or 1) - 1
+        local currentJob = Core.JobsPlayerCount[job]
+        Core.JobsPlayerCount[job] = ((currentJob and currentJob > 0) and currentJob or 1) - 1
 
-        GlobalState[("%s:count"):format(job)] = ESX.JobsPlayerCount[job]
+        GlobalState[("%s:count"):format(job)] = Core.JobsPlayerCount[job]
         Core.playersByIdentifier[xPlayer.identifier] = nil
 
         Core.SavePlayer(xPlayer, function()
@@ -335,20 +335,20 @@ AddEventHandler("esx:playerLoaded", function(_, xPlayer)
     local job = xPlayer.getJob().name
     local jobKey = ("%s:count"):format(job)
 
-    ESX.JobsPlayerCount[job] = (ESX.JobsPlayerCount[job] or 0) + 1
-    GlobalState[jobKey] = ESX.JobsPlayerCount[job]
+    Core.JobsPlayerCount[job] = (Core.JobsPlayerCount[job] or 0) + 1
+    GlobalState[jobKey] = Core.JobsPlayerCount[job]
 end)
 
 AddEventHandler("esx:setJob", function(_, job, lastJob)
     local lastJobKey = ("%s:count"):format(lastJob.name)
     local jobKey = ("%s:count"):format(job.name)
-    local currentLastJob = ESX.JobsPlayerCount[lastJob.name]
+    local currentLastJob = Core.JobsPlayerCount[lastJob.name]
 
-    ESX.JobsPlayerCount[lastJob.name] = ((currentLastJob and currentLastJob > 0) and currentLastJob or 1) - 1
-    ESX.JobsPlayerCount[job.name] = (ESX.JobsPlayerCount[job.name] or 0) + 1
+    Core.JobsPlayerCount[lastJob.name] = ((currentLastJob and currentLastJob > 0) and currentLastJob or 1) - 1
+    Core.JobsPlayerCount[job.name] = (Core.JobsPlayerCount[job.name] or 0) + 1
 
-    GlobalState[lastJobKey] = ESX.JobsPlayerCount[lastJob.name]
-    GlobalState[jobKey] = ESX.JobsPlayerCount[job.name]
+    GlobalState[lastJobKey] = Core.JobsPlayerCount[lastJob.name]
+    GlobalState[jobKey] = Core.JobsPlayerCount[job.name]
 end)
 
 AddEventHandler("esx:playerLogout", function(playerId, cb)
@@ -462,6 +462,7 @@ if not Config.CustomInventory then
             if not targetXPlayer.hasWeapon(itemName) then
                 sourceXPlayer.showNotification(TranslateCap("gave_weapon_noweapon", targetXPlayer.name))
                 targetXPlayer.showNotification(TranslateCap("received_weapon_noweapon", sourceXPlayer.name, weapon.label))
+                return
             end
 
             local _, weaponObject = ESX.GetWeapon(itemName)
@@ -502,7 +503,8 @@ if not Config.CustomInventory then
             if itemCount == nil or itemCount < 1 then
                 return xPlayer.showNotification(TranslateCap("imp_invalid_amount"))
             end
-                local account = xPlayer.getAccount(itemName)
+
+            local account = xPlayer.getAccount(itemName)
 
             if itemCount > account.money or account.money < 1 then
                 return xPlayer.showNotification(TranslateCap("imp_invalid_amount"))
@@ -694,7 +696,7 @@ AddEventHandler("onResourceStart", function(key)
         StopResource(key)
         error(("WE STOPPED A RESOURCE THAT WILL BREAK ^1ESX^1, PLEASE REMOVE ^5%s^1"):format(key))
     end
-
+    -- luacheck: ignore
     if not SetEntityOrphanMode then
         CreateThread(function()
             while true do
