@@ -2,7 +2,7 @@ local categories, vehicles = {}, {}
 local vehiclesByModel = {}
 
 CreateThread(function()
-	exports["esx_society"]:registerSociety('cardealer', TranslateCap('car_dealer'), 'society_cardealer', 'society_cardealer', 'society_cardealer', {type = 'private'})
+	exports["fw_society"]:registerSociety('cardealer', TranslateCap('car_dealer'), 'society_cardealer', 'society_cardealer', 'society_cardealer', {type = 'private'})
 end)
 
 CreateThread(function()
