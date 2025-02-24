@@ -15,11 +15,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- A despejar estrutura da base de dados para template_legacy
-CREATE DATABASE IF NOT EXISTS `template_legacy` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
-USE `template_legacy`;
+-- A despejar estrutura da base de dados para template
+CREATE DATABASE IF NOT EXISTS `template` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+USE `template`;
 
--- A despejar estrutura para tabela template_legacy.addon_account
+-- A despejar estrutura para tabela template.addon_account
 CREATE TABLE IF NOT EXISTS `addon_account` (
   `name` varchar(60) NOT NULL,
   `label` varchar(100) NOT NULL,
@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS `addon_account` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.addon_account: ~1 rows (aproximadamente)
+-- A despejar dados para tabela template.addon_account: ~1 rows (aproximadamente)
 INSERT INTO `addon_account` (`name`, `label`, `shared`) VALUES
 	('society_cardealer', 'Concessionnaire', 1);
 
--- A despejar estrutura para tabela template_legacy.addon_account_data
+-- A despejar estrutura para tabela template.addon_account_data
 CREATE TABLE IF NOT EXISTS `addon_account_data` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `account_name` varchar(100) DEFAULT NULL,
@@ -42,11 +42,11 @@ CREATE TABLE IF NOT EXISTS `addon_account_data` (
   KEY `index_addon_account_data_account_name` (`account_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.addon_account_data: ~1 rows (aproximadamente)
+-- A despejar dados para tabela template.addon_account_data: ~1 rows (aproximadamente)
 INSERT INTO `addon_account_data` (`id`, `account_name`, `money`, `owner`) VALUES
 	(1, 'society_cardealer', 0, NULL);
 
--- A despejar estrutura para tabela template_legacy.cardealer_vehicles
+-- A despejar estrutura para tabela template.cardealer_vehicles
 CREATE TABLE IF NOT EXISTS `cardealer_vehicles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `vehicle` varchar(255) NOT NULL,
@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS `cardealer_vehicles` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.cardealer_vehicles: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.cardealer_vehicles: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.items
+-- A despejar estrutura para tabela template.items
 CREATE TABLE IF NOT EXISTS `items` (
   `name` varchar(50) NOT NULL,
   `label` varchar(50) NOT NULL,
@@ -66,21 +66,21 @@ CREATE TABLE IF NOT EXISTS `items` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- A despejar dados para tabela template_legacy.items: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.items: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.jobs
+-- A despejar estrutura para tabela template.jobs
 CREATE TABLE IF NOT EXISTS `jobs` (
   `name` varchar(50) NOT NULL,
   `label` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- A despejar dados para tabela template_legacy.jobs: ~2 rows (aproximadamente)
+-- A despejar dados para tabela template.jobs: ~2 rows (aproximadamente)
 INSERT INTO `jobs` (`name`, `label`) VALUES
 	('cardealer', 'Concessionnaire'),
 	('unemployed', 'Unemployed');
 
--- A despejar estrutura para tabela template_legacy.job_grades
+-- A despejar estrutura para tabela template.job_grades
 CREATE TABLE IF NOT EXISTS `job_grades` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `job_name` varchar(50) DEFAULT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `job_grades` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- A despejar dados para tabela template_legacy.job_grades: ~5 rows (aproximadamente)
+-- A despejar dados para tabela template.job_grades: ~5 rows (aproximadamente)
 INSERT INTO `job_grades` (`id`, `job_name`, `grade`, `name`, `label`, `salary`, `skin_male`, `skin_female`) VALUES
 	(1, 'unemployed', 0, 'unemployed', 'Unemployed', 200, '{}', '{}'),
 	(2, 'cardealer', 0, 'recruit', 'Recrue', 10, '{}', '{}'),
@@ -101,18 +101,18 @@ INSERT INTO `job_grades` (`id`, `job_name`, `grade`, `name`, `label`, `salary`, 
 	(4, 'cardealer', 2, 'experienced', 'Experimente', 40, '{}', '{}'),
 	(5, 'cardealer', 3, 'boss', 'Patron', 0, '{}', '{}');
 
--- A despejar estrutura para tabela template_legacy.licenses
+-- A despejar estrutura para tabela template.licenses
 CREATE TABLE IF NOT EXISTS `licenses` (
   `type` varchar(60) NOT NULL,
   `label` varchar(60) NOT NULL,
   PRIMARY KEY (`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.licenses: ~1 rows (aproximadamente)
+-- A despejar dados para tabela template.licenses: ~1 rows (aproximadamente)
 INSERT INTO `licenses` (`type`, `label`) VALUES
 	('weapon', 'Weapon License');
 
--- A despejar estrutura para tabela template_legacy.owned_vehicles
+-- A despejar estrutura para tabela template.owned_vehicles
 CREATE TABLE IF NOT EXISTS `owned_vehicles` (
   `owner` varchar(60) NOT NULL,
   `plate` varchar(12) NOT NULL,
@@ -125,9 +125,9 @@ CREATE TABLE IF NOT EXISTS `owned_vehicles` (
   PRIMARY KEY (`plate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.owned_vehicles: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.owned_vehicles: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.ox_doorlock
+-- A despejar estrutura para tabela template.ox_doorlock
 CREATE TABLE IF NOT EXISTS `ox_doorlock` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
@@ -135,9 +135,9 @@ CREATE TABLE IF NOT EXISTS `ox_doorlock` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- A despejar dados para tabela template_legacy.ox_doorlock: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.ox_doorlock: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.ox_inventory
+-- A despejar estrutura para tabela template.ox_inventory
 CREATE TABLE IF NOT EXISTS `ox_inventory` (
   `owner` varchar(60) DEFAULT NULL,
   `name` varchar(100) NOT NULL,
@@ -146,9 +146,9 @@ CREATE TABLE IF NOT EXISTS `ox_inventory` (
   UNIQUE KEY `owner` (`owner`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- A despejar dados para tabela template_legacy.ox_inventory: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.ox_inventory: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.rented_vehicles
+-- A despejar estrutura para tabela template.rented_vehicles
 CREATE TABLE IF NOT EXISTS `rented_vehicles` (
   `vehicle` varchar(60) NOT NULL,
   `plate` varchar(12) NOT NULL,
@@ -159,9 +159,9 @@ CREATE TABLE IF NOT EXISTS `rented_vehicles` (
   PRIMARY KEY (`plate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.rented_vehicles: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.rented_vehicles: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.society_moneywash
+-- A despejar estrutura para tabela template.society_moneywash
 CREATE TABLE IF NOT EXISTS `society_moneywash` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `identifier` varchar(60) NOT NULL,
@@ -170,9 +170,9 @@ CREATE TABLE IF NOT EXISTS `society_moneywash` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.society_moneywash: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.society_moneywash: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.users
+-- A despejar estrutura para tabela template.users
 CREATE TABLE IF NOT EXISTS `users` (
   `identifier` varchar(60) NOT NULL,
   `accounts` longtext DEFAULT NULL,
@@ -193,9 +193,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`identifier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- A despejar dados para tabela template_legacy.users: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.users: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.user_licenses
+-- A despejar estrutura para tabela template.user_licenses
 CREATE TABLE IF NOT EXISTS `user_licenses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `type` varchar(60) NOT NULL,
@@ -203,9 +203,9 @@ CREATE TABLE IF NOT EXISTS `user_licenses` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.user_licenses: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.user_licenses: ~0 rows (aproximadamente)
 
--- A despejar estrutura para tabela template_legacy.vehicles
+-- A despejar estrutura para tabela template.vehicles
 CREATE TABLE IF NOT EXISTS `vehicles` (
   `name` varchar(60) NOT NULL,
   `model` varchar(60) NOT NULL,
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   PRIMARY KEY (`model`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.vehicles: ~240 rows (aproximadamente)
+-- A despejar dados para tabela template.vehicles: ~240 rows (aproximadamente)
 INSERT INTO `vehicles` (`name`, `model`, `price`, `category`) VALUES
 	('Adder', 'adder', 900000, 'super'),
 	('Akuma', 'AKUMA', 7500, 'motorcycles'),
@@ -457,14 +457,14 @@ INSERT INTO `vehicles` (`name`, `model`, `price`, `category`) VALUES
 	('Zombie Luxuary', 'zombieb', 12000, 'motorcycles'),
 	('Z-Type', 'ztype', 220000, 'sportsclassics');
 
--- A despejar estrutura para tabela template_legacy.vehicle_categories
+-- A despejar estrutura para tabela template.vehicle_categories
 CREATE TABLE IF NOT EXISTS `vehicle_categories` (
   `name` varchar(60) NOT NULL,
   `label` varchar(60) NOT NULL,
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.vehicle_categories: ~11 rows (aproximadamente)
+-- A despejar dados para tabela template.vehicle_categories: ~11 rows (aproximadamente)
 INSERT INTO `vehicle_categories` (`name`, `label`) VALUES
 	('compacts', 'Compacts'),
 	('coupes', 'Coupés'),
@@ -478,7 +478,7 @@ INSERT INTO `vehicle_categories` (`name`, `label`) VALUES
 	('suvs', 'SUVs'),
 	('vans', 'Vans');
 
--- A despejar estrutura para tabela template_legacy.vehicle_sold
+-- A despejar estrutura para tabela template.vehicle_sold
 CREATE TABLE IF NOT EXISTS `vehicle_sold` (
   `client` varchar(50) NOT NULL,
   `model` varchar(50) NOT NULL,
@@ -488,7 +488,7 @@ CREATE TABLE IF NOT EXISTS `vehicle_sold` (
   PRIMARY KEY (`plate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- A despejar dados para tabela template_legacy.vehicle_sold: ~0 rows (aproximadamente)
+-- A despejar dados para tabela template.vehicle_sold: ~0 rows (aproximadamente)
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
