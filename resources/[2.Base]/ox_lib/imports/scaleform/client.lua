@@ -1,3 +1,11 @@
+--[[
+    https://github.com/overextended/ox_lib
+
+    This file is licensed under LGPL-3.0 or higher <https://www.gnu.org/licenses/lgpl-3.0.en.html>
+
+    Copyright © 2025 Linden <https://github.com/thelindat>
+]]
+
 ---@class renderTargetTable
 ---@field name string
 ---@field model string | number
@@ -16,8 +24,9 @@
 ---@field draw boolean
 ---@field target number
 ---@field targetName string
----@field handle number
+---@field sfHandle? number
 ---@field fullScreen boolean
+---@field private private { isDrawing: boolean }
 lib.scaleform = lib.class('Scaleform')
 
 --- Converts the arguments into data types usable by scaleform
@@ -153,36 +162,43 @@ function lib.scaleform:setRenderTarget(name, model)
     end
 end
 
----@return nil
+function lib.scaleform:isDrawing()
+    return self.private.isDrawing
+end
+
+function lib.scaleform:draw()
+    if self.target then
+        SetTextRenderId(self.target)
+        SetScriptGfxDrawOrder(4)
+        SetScriptGfxDrawBehindPausemenu(true)
+        SetScaleformFitRendertarget(self.sfHandle, true)
+    end
+
+    if self.fullScreen then
+        DrawScaleformMovieFullscreen(self.sfHandle, 255, 255, 255, 255, 0)
+    else
+        if not self.x or not self.y or not self.width or not self.height then
+            error('attempted to draw scaleform without setting properties')
+        else
+            DrawScaleformMovie(self.sfHandle, self.x, self.y, self.width, self.height, 255, 255, 255, 255, 0)
+        end
+    end
+
+    if self.target then
+        SetTextRenderId(1)
+    end
+end
+
 function lib.scaleform:startDrawing()
     if self.private.isDrawing then
         return
     end
 
     self.private.isDrawing = true
+
     CreateThread(function()
-        while self.private.isDrawing do
-            if self.target then
-                SetTextRenderId(self.target)
-                SetScriptGfxDrawOrder(4)
-                SetScriptGfxDrawBehindPausemenu(true)
-                SetScaleformFitRendertarget(self.sfHandle, true)
-            end
-
-            if self.fullScreen then
-                DrawScaleformMovieFullscreen(self.sfHandle, 255, 255, 255, 255, 0)
-            else
-                if not self.x or not self.y or not self.width or not self.height then
-                    error('attempted to draw scaleform without setting properties')
-                else
-                    DrawScaleformMovie(self.sfHandle, self.x, self.y, self.width, self.height, 255, 255, 255, 255, 0)
-                end
-            end
-
-            if self.target then
-                SetTextRenderId(1)
-            end
-
+        while self:isDrawing() do
+            self:draw()
             Wait(0)
         end
     end)

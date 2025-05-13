@@ -6,10 +6,10 @@ game         'gta5'
 
 --[[ Resource Information ]]--
 name         'ox_doorlock'
-version      '1.18.0'
+version      '1.19.3'
 license      'GPL-3.0-or-later'
 author       'Overextended'
-repository   'https://github.com/overextended/ox_doorlock'
+repository   'https://github.com/communityox/ox_doorlock'
 
 --[[ Manifest ]]--
 shared_scripts {

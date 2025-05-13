@@ -1,6 +1,7 @@
+local isRDR = not TerraingridActivate and true or false
+
 local chatInputActive = false
 local chatInputActivating = false
-local chatHidden = true
 local chatLoaded = false
 
 RegisterNetEvent('chatMessage')
@@ -8,6 +9,8 @@ RegisterNetEvent('chat:addTemplate')
 RegisterNetEvent('chat:addMessage')
 RegisterNetEvent('chat:addSuggestion')
 RegisterNetEvent('chat:addSuggestions')
+RegisterNetEvent('chat:addMode')
+RegisterNetEvent('chat:removeMode')
 RegisterNetEvent('chat:removeSuggestion')
 RegisterNetEvent('chat:clear')
 
@@ -17,48 +20,54 @@ RegisterNetEvent('__cfx_internal:serverPrint')
 RegisterNetEvent('_chat:messageEntered')
 
 --deprecated, use chat:addMessage
-AddEventHandler('chatMessage', function(author, ctype, text)
+AddEventHandler('chatMessage', function(author, color, text)
   local args = { text }
   if author ~= "" then
     table.insert(args, 1, author)
   end
-  local ctype = ctype ~= false and ctype or "normal"
   SendNUIMessage({
     type = 'ON_MESSAGE',
     message = {
-      template = '<div class="chat-message '..ctype..'"><div class="chat-message-body"><strong>{0}:</strong> {1}</div></div>',
-      args = {author, text}
+      color = color,
+      multiline = true,
+      args = args
     }
   })
 end)
 
 AddEventHandler('__cfx_internal:serverPrint', function(msg)
+  print(msg)
 
   SendNUIMessage({
     type = 'ON_MESSAGE',
     message = {
       templateId = 'print',
       multiline = true,
-      args = { msg }
+      args = { msg },
+      mode = '_global'
     }
   })
 end)
 
-AddEventHandler('chat:addMessage', function(message)
-  if message.template ~= "id_card" then
-    SendNUIMessage({
-      type = 'ON_MESSAGE',
-      message = message
-    })
-  else
-    SendNUIMessage({
-      type = 'ON_MESSAGE',
-      message = message
-    })
+-- addMessage
+local addMessage = function(message)
+  if type(message) == 'string' then
+    message = {
+      args = { message }
+    }
   end
-end)
 
-AddEventHandler('chat:addSuggestion', function(name, help, params)
+  SendNUIMessage({
+    type = 'ON_MESSAGE',
+    message = message
+  })
+end
+
+exports('addMessage', addMessage)
+AddEventHandler('chat:addMessage', addMessage)
+
+-- addSuggestion
+local addSuggestion = function(name, help, params)
   SendNUIMessage({
     type = 'ON_SUGGESTION_ADD',
     suggestion = {
@@ -67,7 +76,10 @@ AddEventHandler('chat:addSuggestion', function(name, help, params)
       params = params or nil
     }
   })
-end)
+end
+
+exports('addSuggestion', addSuggestion)
+AddEventHandler('chat:addSuggestion', addSuggestion)
 
 AddEventHandler('chat:addSuggestions', function(suggestions)
   for _, suggestion in ipairs(suggestions) do
@@ -81,6 +93,20 @@ end)
 AddEventHandler('chat:removeSuggestion', function(name)
   SendNUIMessage({
     type = 'ON_SUGGESTION_REMOVE',
+    name = name
+  })
+end)
+
+AddEventHandler('chat:addMode', function(mode)
+  SendNUIMessage({
+    type = 'ON_MODE_ADD',
+    mode = mode
+  })
+end)
+
+AddEventHandler('chat:removeMode', function(name)
+  SendNUIMessage({
+    type = 'ON_MODE_REMOVE',
     name = name
   })
 end)
@@ -103,7 +129,7 @@ end)
 
 RegisterNUICallback('chatResult', function(data, cb)
   chatInputActive = false
-  SetNuiFocus(false, false)
+  SetNuiFocus(false)
 
   if not data.canceled then
     local id = PlayerId()
@@ -114,7 +140,7 @@ RegisterNUICallback('chatResult', function(data, cb)
     if data.message:sub(1, 1) == '/' then
       ExecuteCommand(data.message:sub(2))
     else
-      TriggerServerEvent('_chat:messageEntered', GetPlayerName(id), { r, g, b }, data.message)
+      TriggerServerEvent('_chat:messageEntered', GetPlayerName(id), { r, g, b }, data.message, data.mode)
     end
   end
 
@@ -128,7 +154,7 @@ local function refreshCommands()
     local suggestions = {}
 
     for _, command in ipairs(registeredCommands) do
-        if IsAceAllowed(('command.%s'):format(command.name)) then
+        if IsAceAllowed(('command.%s'):format(command.name)) and command.name ~= 'toggleChat' then
             table.insert(suggestions, {
                 name = '/' .. command.name,
                 help = ''
@@ -182,7 +208,7 @@ AddEventHandler('onClientResourceStop', function(resName)
 end)
 
 RegisterNUICallback('loaded', function(data, cb)
-  TriggerServerEvent('chat:init');
+  TriggerServerEvent('chat:init')
 
   refreshCommands()
   refreshThemes()
@@ -192,15 +218,48 @@ RegisterNUICallback('loaded', function(data, cb)
   cb('ok')
 end)
 
+local CHAT_HIDE_STATES = {
+  SHOW_WHEN_ACTIVE = 0,
+  ALWAYS_SHOW = 1,
+  ALWAYS_HIDE = 2
+}
+
+local kvpEntry = GetResourceKvpString('hideState')
+local chatHideState = kvpEntry and tonumber(kvpEntry) or CHAT_HIDE_STATES.SHOW_WHEN_ACTIVE
+local isFirstHide = true
+
+if not isRDR then
+  if RegisterKeyMapping then
+    RegisterKeyMapping('toggleChat', 'Toggle chat', 'keyboard', 'l')
+  end
+
+  RegisterCommand('toggleChat', function()
+    if chatHideState == CHAT_HIDE_STATES.SHOW_WHEN_ACTIVE then
+      chatHideState = CHAT_HIDE_STATES.ALWAYS_SHOW
+    elseif chatHideState == CHAT_HIDE_STATES.ALWAYS_SHOW then
+      chatHideState = CHAT_HIDE_STATES.ALWAYS_HIDE
+    elseif chatHideState == CHAT_HIDE_STATES.ALWAYS_HIDE then
+      chatHideState = CHAT_HIDE_STATES.SHOW_WHEN_ACTIVE
+    end
+
+    isFirstHide = false
+
+    SetResourceKvp('hideState', tostring(chatHideState))
+  end, false)
+end
+
 Citizen.CreateThread(function()
   SetTextChatEnabled(false)
-  SetNuiFocus(false, false)
+  SetNuiFocus(false)
+
+  local lastChatHideState = -1
+  local origChatHideState = -1
 
   while true do
-    Wait(50)
+    Wait(0)
 
     if not chatInputActive then
-      if IsControlPressed(0, 245) --[[ INPUT_MP_TEXT_CHAT_ALL ]] then
+      if IsControlPressed(0, isRDR and `INPUT_MP_TEXT_CHAT_ALL` or 245) --[[ INPUT_MP_TEXT_CHAT_ALL ]] then
         chatInputActive = true
         chatInputActivating = true
 
@@ -211,7 +270,7 @@ Citizen.CreateThread(function()
     end
 
     if chatInputActivating then
-      if not IsControlPressed(0, 245) then
+      if not IsControlPressed(0, isRDR and `INPUT_MP_TEXT_CHAT_ALL` or 245) then
         SetNuiFocus(true)
 
         chatInputActivating = false
@@ -219,19 +278,30 @@ Citizen.CreateThread(function()
     end
 
     if chatLoaded then
-      local shouldBeHidden = false
+      local forceHide = IsScreenFadedOut() or IsPauseMenuActive()
+      local wasForceHide = false
 
-      if IsScreenFadedOut() or IsPauseMenuActive() then
-        shouldBeHidden = true
+      if chatHideState ~= CHAT_HIDE_STATES.ALWAYS_HIDE then
+        if forceHide then
+          origChatHideState = chatHideState
+          chatHideState = CHAT_HIDE_STATES.ALWAYS_HIDE
+        end
+      elseif not forceHide and origChatHideState ~= -1 then
+        chatHideState = origChatHideState
+        origChatHideState = -1
+        wasForceHide = true
       end
 
-      if (shouldBeHidden and not chatHidden) or (not shouldBeHidden and chatHidden) then
-        chatHidden = shouldBeHidden
+      if chatHideState ~= lastChatHideState then
+        lastChatHideState = chatHideState
 
         SendNUIMessage({
           type = 'ON_SCREEN_STATE_CHANGE',
-          shouldHide = shouldBeHidden
+          hideState = chatHideState,
+          fromUserInteraction = not forceHide and not isFirstHide and not wasForceHide
         })
+
+        isFirstHide = false
       end
     end
   end
