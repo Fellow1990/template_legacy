@@ -14,11 +14,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-
--- A despejar estrutura da base de dados para template
-CREATE DATABASE IF NOT EXISTS `template` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
-USE `template`;
-
 -- A despejar estrutura para tabela template.addon_account
 CREATE TABLE IF NOT EXISTS `addon_account` (
   `name` varchar(60) NOT NULL,
