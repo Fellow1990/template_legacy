@@ -67,6 +67,46 @@ local function onPlayerJoined(playerId)
     end
 end
 
+---@param playerId number
+---@param reason string
+---@param cb function?
+local function onPlayerDropped(playerId, reason, cb)
+    local p = not cb and promise:new()
+    local function resolve()
+        if cb then
+            return cb()
+        elseif(p) then
+            return p:resolve()
+        end
+    end
+
+    local xPlayer = ESX.GetPlayerFromId(playerId)
+    if not xPlayer then
+        return resolve()
+    end
+
+    TriggerEvent("esx:playerDropped", playerId, reason)
+    local job = xPlayer.getJob().name
+    local currentJob = Core.JobsPlayerCount[job]
+    Core.JobsPlayerCount[job] = ((currentJob and currentJob > 0) and currentJob or 1) - 1
+
+    GlobalState[("%s:count"):format(job)] = Core.JobsPlayerCount[job]
+
+    Core.SavePlayer(xPlayer, function()
+        GlobalState["playerCount"] = GlobalState["playerCount"] - 1
+        ESX.Players[playerId] = nil
+        Core.playersByIdentifier[xPlayer.identifier] = nil
+
+        resolve()
+    end)
+
+    if p then
+        return Citizen.Await(p)
+    end
+end
+AddEventHandler("esx:onPlayerDropped", onPlayerDropped)
+
+
 if Config.Multichar then
     AddEventHandler("esx:onPlayerJoined", function(src, char, data)
         while not next(ESX.Jobs) do
@@ -100,7 +140,10 @@ if not Config.Multichar then
         local playerId = source
         deferrals.defer()
         Wait(0) -- Required
-        local identifier = ESX.GetIdentifier(playerId)
+        local identifier
+        local correctLicense, _ = pcall(function ()
+            identifier = ESX.GetIdentifier(playerId)
+        end)
 
         -- luacheck: ignore
         if not SetEntityOrphanMode then
@@ -115,17 +158,27 @@ if not Config.Multichar then
             return deferrals.done("[ESX] OxMySQL Was Unable To Connect to your database. Please make sure it is turned on and correctly configured in your server.cfg")
         end
 
-        if identifier then
-            if ESX.GetPlayerFromIdentifier(identifier) then
-                return deferrals.done(
-                    ("[ESX] There was an error loading your character!\nError code: identifier-active\n\nThis error is caused by a player on this server who has the same identifier as you have. Make sure you are not playing on the same account.\n\nYour identifier: %s"):format(identifier)
-                )
-            else
-                return deferrals.done()
+        if not identifier or not correctLicense then
+            if GetResourceState("esx_identity") ~= "started" then
+                return deferrals.done("[ESX] There was an error loading your character!\nError code: identifier-missing\n\nThe cause of this error is not known, your identifier could not be found. Please come back later or report this problem to the server administration team.")
             end
-        else
-            return deferrals.done("[ESX] There was an error loading your character!\nError code: identifier-missing\n\nThe cause of this error is not known, your identifier could not be found. Please come back later or report this problem to the server administration team.")
         end
+
+        local xPlayer = ESX.GetPlayerFromIdentifier(identifier)
+
+        if not xPlayer then
+            return deferrals.done()
+        end
+
+        if GetPlayerPing(xPlayer.source --[[@as string]]) > 0 then
+            return deferrals.done(
+                ("[ESX] There was an error loading your character!\nError code: identifier-active\n\nThis error is caused by a player on this server who has the same identifier as you have. Make sure you are not playing on the same account.\n\nYour identifier: %s"):format(identifier)
+            )
+        end
+
+        deferrals.update(("[ESX] Cleaning stale player entry..."):format(identifier))
+        onPlayerDropped(xPlayer.source, "esx_stale_player_obj")
+        deferrals.done()
     end)
 end
 
@@ -290,6 +343,7 @@ function loadESXPlayer(identifier, playerId, isNew)
     TriggerEvent("esx:playerLoaded", playerId, xPlayer, isNew)
     userData.money = xPlayer.getMoney()
     userData.maxWeight = xPlayer.getMaxWeight()
+    userData.variables = xPlayer.variables or {}
     xPlayer.triggerEvent("esx:playerLoaded", userData, isNew, userData.skin)
 
     if not Config.CustomInventory then
@@ -311,24 +365,9 @@ AddEventHandler("chatMessage", function(playerId, _, message)
     end
 end)
 
+---@param reason string
 AddEventHandler("playerDropped", function(reason)
-    local playerId = source
-    local xPlayer = ESX.GetPlayerFromId(playerId)
-
-    if xPlayer then
-        TriggerEvent("esx:playerDropped", playerId, reason)
-        local job = xPlayer.getJob().name
-        local currentJob = Core.JobsPlayerCount[job]
-        Core.JobsPlayerCount[job] = ((currentJob and currentJob > 0) and currentJob or 1) - 1
-
-        GlobalState[("%s:count"):format(job)] = Core.JobsPlayerCount[job]
-        Core.playersByIdentifier[xPlayer.identifier] = nil
-
-        Core.SavePlayer(xPlayer, function()
-            GlobalState["playerCount"] = GlobalState["playerCount"] - 1
-            ESX.Players[playerId] = nil
-        end)
-    end
+    onPlayerDropped(source --[[@as number]], reason)
 end)
 
 AddEventHandler("esx:playerLoaded", function(_, xPlayer)
@@ -352,19 +391,7 @@ AddEventHandler("esx:setJob", function(_, job, lastJob)
 end)
 
 AddEventHandler("esx:playerLogout", function(playerId, cb)
-    local xPlayer = ESX.GetPlayerFromId(playerId)
-    if xPlayer then
-        TriggerEvent("esx:playerDropped", playerId)
-
-        Core.playersByIdentifier[xPlayer.identifier] = nil
-        Core.SavePlayer(xPlayer, function()
-            GlobalState["playerCount"] = GlobalState["playerCount"] - 1
-            ESX.Players[playerId] = nil
-            if cb then
-                cb()
-            end
-        end)
-    end
+    onPlayerDropped(playerId, "esx_player_logout")
     TriggerClientEvent("esx:onPlayerLogout", playerId)
 end)
 

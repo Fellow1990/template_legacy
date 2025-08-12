@@ -46,6 +46,7 @@ end
 RegisterNetEvent("esx_identity:showRegisterIdentity", function()
         TriggerEvent("esx_skin:resetFirstSpawn")
         while not (ready and loadingScreenFinished) do
+            print("Waiting for esx_identity NUI..")
             Wait(100)
         end
         if not ESX.PlayerData.dead then

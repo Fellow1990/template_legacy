@@ -4,7 +4,7 @@ function Adjustments:RemoveHudComponents()
     for i = 1, #Config.RemoveHudComponents do
         if Config.RemoveHudComponents[i] then
             SetHudComponentSize(i, 0.0, 0.0)
-            SetHudComponentPosition(i, 900, 900)
+            SetHudComponentPosition(i, 900.0, 900.0)
         end
     end
 end
@@ -89,7 +89,6 @@ function Adjustments:NPCScenarios()
             "WORLD_VEHICLE_BIKER",
             "WORLD_VEHICLE_BOAT_IDLE",
             "WORLD_VEHICLE_BOAT_IDLE_ALAMO",
-            "WORLD_VEHICLE_BOAT_IDLE_MARQUIS",
             "WORLD_VEHICLE_BOAT_IDLE_MARQUIS",
             "WORLD_VEHICLE_BROKEN_DOWN",
             "WORLD_VEHICLE_BUSINESSMEN",
@@ -225,6 +224,20 @@ function Adjustments:DisableRadio()
     end
 end
 
+function Adjustments:Multipliers()
+    CreateThread(function()
+        while true do
+            SetPedDensityMultiplierThisFrame(Config.Multipliers.pedDensity)
+            SetScenarioPedDensityMultiplierThisFrame(Config.Multipliers.scenarioPedDensityInterior, Config.Multipliers.scenarioPedDensityExterior)
+            SetAmbientVehicleRangeMultiplierThisFrame(Config.Multipliers.ambientVehicleRange)
+            SetParkedVehicleDensityMultiplierThisFrame(Config.Multipliers.parkedVehicleDensity)
+            SetRandomVehicleDensityMultiplierThisFrame(Config.Multipliers.randomVehicleDensity)
+            SetVehicleDensityMultiplierThisFrame(Config.Multipliers.vehicleDensity)
+            Wait(0)
+        end
+    end)
+end
+
 function Adjustments:Load()
     self:RemoveHudComponents()
     self:DisableAimAssist()
@@ -239,4 +252,5 @@ function Adjustments:Load()
     self:DiscordPresence()
     self:WantedLevel()
     self:DisableRadio()
+    self:Multipliers()
 end

@@ -1,4 +1,4 @@
-Locales["en"] = {
+return {
     -- Inventory
     ["inventory"] = "Inventory ( Weight %s / %s )",
     ["use"] = "Use",
@@ -65,6 +65,8 @@ Locales["en"] = {
     ["command_repair_success_target"] = "An admin repaired your vehicle",
     ["command_clear"] = "Clear chat Text",
     ["command_clearall"] = "Clear chat Text for all players",
+    ["command_refreshitems"] = "Reload all items from the database.",
+    ["command_refreshitems_success"] = "Successfully reloaded %d items.",
     ["command_clearinventory"] = "Remove All items from the Players Inventory",
     ["command_clearloadout"] = "Remove All weapons from the Players Loadout",
     ["command_freeze"] = "Freeze a player",

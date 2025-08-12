@@ -52,10 +52,10 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, inventory, 
     if Config.Multichar then
         local startIndex = identifier:find(":", 1)
         if startIndex then
-            self.license = ("license%s"):format(identifier:sub(startIndex, identifier:len()))
+            self.license = ("%s%s"):format(Config.Identifier, identifier:sub(startIndex, identifier:len()))
         end
     else
-        self.license = ("license:%s"):format(identifier)
+        self.license = ("%s:%s"):format(Config.Identifier, identifier)
     end
 
     if type(self.metadata.jobDuty) ~= "boolean" then
@@ -89,6 +89,11 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, inventory, 
     ---@return boolean
     function self.isPaycheckEnabled()
         return self.paycheckEnabled
+    end
+
+    ---@return boolean
+    function self.isAdmin()
+        return Core.IsPlayerAdmin(self.source)
     end
 
     ---@param coordinates vector4 | vector3 | table
@@ -194,6 +199,8 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, inventory, 
     ---@return nil
     function self.set(k, v)
         self.variables[k] = v
+        
+        self.triggerEvent('esx:updatePlayerData', 'variables', self.variables)
     end
 
     ---@param k string
@@ -454,6 +461,12 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, inventory, 
     function self.getWeight()
         return self.weight
     end
+
+    ---@return number
+    function self.getSource()
+        return self.source
+    end
+    self.getPlayerId = self.getSource
 
     ---@return number
     function self.getMaxWeight()
@@ -936,6 +949,17 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, inventory, 
         self.triggerEvent('esx:updatePlayerData', 'metadata', self.metadata)
     end
 
+    ---@param command string
+    ---@return nil
+    function self.executeCommand(command)
+        if type(command) ~= "string" then
+            error("xPlayer.executeCommand must be of type string!")
+            return
+        end
+
+        self.triggerEvent("esx:executeCommand", command)
+    end
+
     for _, funcs in pairs(Core.PlayerFunctionOverrides) do
         for fnName, fn in pairs(funcs) do
             self[fnName] = fn(self)
@@ -944,3 +968,17 @@ function CreateExtendedPlayer(playerId, identifier, group, accounts, inventory, 
 
     return self
 end
+
+local function runStaticPlayerMethod(src, method, ...)
+    local xPlayer = ESX.Players[src]
+    if not xPlayer then
+        return
+    end
+
+    if not ESX.IsFunctionReference(xPlayer[method]) then
+        error(("Attempted to call invalid method on playerId %s: %s"):format(src, method))
+    end
+
+    return xPlayer[method](...)
+end
+exports("RunStaticPlayerMethod", runStaticPlayerMethod)

@@ -85,7 +85,7 @@ end
 function ESX.SetPlayerData(key, val)
     local current = ESX.PlayerData[key]
     ESX.PlayerData[key] = val
-    if key ~= "inventory" and key ~= "loadout" then
+    if key ~= "loadout" then
         if type(val) == "table" or val ~= current then
             TriggerEvent("esx:setPlayerData", key, val, current)
         end
@@ -152,9 +152,10 @@ end
 ---@param message string The message to show
 ---@param notifyType? string The type of notification to show
 ---@param length? number The length of the notification
+---@param title? string The title of the notification
 ---@return nil
-function ESX.ShowNotification(message, notifyType, length)
-	return IsResourceFound('esx_notify') and exports['esx_notify']:Notify(notifyType, length, message)
+function ESX.ShowNotification(message, notifyType, length, title)
+	return IsResourceFound('esx_notify') and exports['esx_notify']:Notify(notifyType, length, message, title)
 end
 
 function ESX.TextUI(...)
@@ -805,26 +806,24 @@ function ESX.Game.GetVehicleProperties(vehicle)
         return
     end
 
+    ---@type number | number[], number | number[]
     local colorPrimary, colorSecondary = GetVehicleColours(vehicle)
     local pearlescentColor, wheelColor = GetVehicleExtraColours(vehicle)
-    local hasCustomPrimaryColor = GetIsVehiclePrimaryColourCustom(vehicle)
     local dashboardColor = GetVehicleDashboardColor(vehicle)
     local interiorColor = GetVehicleInteriorColour(vehicle)
-    local customPrimaryColor = nil
-    if hasCustomPrimaryColor then
-        customPrimaryColor = { GetVehicleCustomPrimaryColour(vehicle) }
+
+    if GetIsVehiclePrimaryColourCustom(vehicle) then
+        colorPrimary = { GetVehicleCustomPrimaryColour(vehicle) }
+    end
+
+    if GetIsVehicleSecondaryColourCustom(vehicle) then
+        colorSecondary = { GetVehicleCustomSecondaryColour(vehicle) }
     end
 
     local hasCustomXenonColor, customXenonColorR, customXenonColorG, customXenonColorB = GetVehicleXenonLightsCustomColor(vehicle)
     local customXenonColor = nil
     if hasCustomXenonColor then
         customXenonColor = { customXenonColorR, customXenonColorG, customXenonColorB }
-    end
-
-    local hasCustomSecondaryColor = GetIsVehicleSecondaryColourCustom(vehicle)
-    local customSecondaryColor = nil
-    if hasCustomSecondaryColor then
-        customSecondaryColor = { GetVehicleCustomSecondaryColour(vehicle) }
     end
 
     local extras = {}
@@ -879,8 +878,6 @@ function ESX.Game.GetVehicleProperties(vehicle)
         dirtLevel = ESX.Math.Round(GetVehicleDirtLevel(vehicle), 1),
         color1 = colorPrimary,
         color2 = colorSecondary,
-        customPrimaryColor = customPrimaryColor,
-        customSecondaryColor = customSecondaryColor,
 
         pearlescentColor = pearlescentColor,
         wheelColor = wheelColor,
@@ -991,17 +988,19 @@ function ESX.Game.SetVehicleProperties(vehicle, props)
     if props.dirtLevel ~= nil then
         SetVehicleDirtLevel(vehicle, props.dirtLevel + 0.0)
     end
-    if props.customPrimaryColor ~= nil then
-        SetVehicleCustomPrimaryColour(vehicle, props.customPrimaryColor[1], props.customPrimaryColor[2], props.customPrimaryColor[3])
-    end
-    if props.customSecondaryColor ~= nil then
-        SetVehicleCustomSecondaryColour(vehicle, props.customSecondaryColor[1], props.customSecondaryColor[2], props.customSecondaryColor[3])
-    end
     if props.color1 ~= nil then
-        SetVehicleColours(vehicle, props.color1, colorSecondary)
+        if type(props.color1) == "table" then
+            SetVehicleCustomPrimaryColour(vehicle, props.color1[1], props.color1[2], props.color1[3])
+        else
+            SetVehicleColours(vehicle, props.color1, colorSecondary)
+        end
     end
     if props.color2 ~= nil then
-        SetVehicleColours(vehicle, props.color1 or colorPrimary, props.color2)
+        if type(props.color2) == "table" then
+            SetVehicleCustomSecondaryColour(vehicle, props.color2[1], props.color2[2], props.color2[3])
+        else
+            SetVehicleColours(vehicle, props.color1 or colorPrimary, props.color2)
+        end
     end
     if props.pearlescentColor ~= nil then
         SetVehicleExtraColours(vehicle, props.pearlescentColor, wheelColor)
@@ -1542,11 +1541,11 @@ function ESX.ShowInventory()
     end)
 end
 
-ESX.SecureNetEvent('esx:showNotification', ESX.ShowNotification)
+RegisterNetEvent('esx:showNotification', ESX.ShowNotification)
 
-ESX.SecureNetEvent('esx:showAdvancedNotification', ESX.ShowAdvancedNotification)
+RegisterNetEvent('esx:showAdvancedNotification', ESX.ShowAdvancedNotification)
 
-ESX.SecureNetEvent('esx:showHelpNotification', ESX.ShowHelpNotification)
+RegisterNetEvent('esx:showHelpNotification', ESX.ShowHelpNotification)
 
 AddEventHandler("onResourceStop", function(resourceName)
     for i = 1, #ESX.UI.Menu.Opened, 1 do

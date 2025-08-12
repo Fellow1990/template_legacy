@@ -79,9 +79,9 @@ end
 
 local defaultInventory = {
 	type = 'newdrop',
-	slots = shared.playerslots,
+	slots = shared.dropslots,
 	weight = 0,
-	maxWeight = shared.playerweight,
+	maxWeight = shared.dropweight,
 	items = {}
 }
 
@@ -178,7 +178,7 @@ function client.openInventory(inv, data)
 
         local targetCoords = targetPed and GetEntityCoords(targetPed)
 
-        if not targetCoords or #(targetCoords - GetEntityCoords(playerPed)) > 1.8 or not (client.hasGroup(shared.police) or not Player(serverId).state.canSteal) then
+        if not targetCoords or #(targetCoords - GetEntityCoords(playerPed)) > 1.8 or (not client.hasGroup(shared.police) and not Player(serverId).state.canSteal) then
             return lib.notify({ id = 'inventory_right_access', type = 'error', description = locale('inventory_right_access') })
         end
     end
@@ -737,7 +737,9 @@ local invHotkeys = false
 
 ---@type function?
 local function registerCommands()
-	RegisterCommand('steal', openNearbyInventory, false)
+	if client.enablestealcommand then
+		RegisterCommand('steal', openNearbyInventory, false)
+	end
 
 	local function openGlovebox(vehicle)
 		if not IsPedInAnyVehicle(playerPed, false) or not NetworkGetEntityIsNetworked(vehicle) then return end
@@ -852,7 +854,7 @@ local function registerCommands()
 		description = locale('disable_hotbar'),
 		defaultKey = client.keys[3],
 		onPressed = function()
-			if EnableWeaponWheel or IsNuiFocused() or lib.progressActive() then return end
+			if EnableWeaponWheel or not invHotkeys or IsNuiFocused() or lib.progressActive() then return end
 			SendNUIMessage({ action = 'toggleHotbar' })
 		end
 	})
@@ -1334,7 +1336,10 @@ RegisterNetEvent('ox_inventory:setPlayerInventory', function(currentDrops, inven
 
 	PlayerData.loaded = true
 
-	lib.notify({ description = locale('inventory_setup') })
+	if not client.disablesetupnotification then
+		lib.notify({ description = locale('inventory_setup') })
+	end
+
 	Shops.refreshShops()
 	Inventory.Stashes()
 	Inventory.Evidence()
@@ -1371,7 +1376,7 @@ RegisterNetEvent('ox_inventory:setPlayerInventory', function(currentDrops, inven
 						local ped = GetPlayerPed(id)
 						local pedCoords = GetEntityCoords(ped)
 
-						if not id or #(playerCoords - pedCoords) > maxDistance or not (client.hasGroup(shared.police) or not Player(currentInventory.id).state.canSteal) then
+						if not id or #(playerCoords - pedCoords) > maxDistance or (not client.hasGroup(shared.police) and not Player(currentInventory.id).state.canSteal) then
 							client.closeInventory()
 							lib.notify({ id = 'inventory_lost_access', type = 'error', description = locale('inventory_lost_access') })
 						else
