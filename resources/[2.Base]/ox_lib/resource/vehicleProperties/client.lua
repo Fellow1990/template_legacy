@@ -105,6 +105,20 @@ RegisterNetEvent('ox_lib:setVehicleProperties', function(netid, data)
     end
     if timeout > 0 then
         lib.setVehicleProperties(NetToVeh(netid), data)
+        if GetResourceState('VehicleDeformation') == 'started' and data.deformation then
+            local deformation = data.deformation
+            if type(deformation) == 'string' then
+                local ok, decoded = pcall(json.decode, deformation)
+                if ok and type(decoded) == 'table' then
+                    deformation = decoded
+                else
+                    deformation = nil
+                end
+            end
+            if type(deformation) == 'table' then
+                exports["VehicleDeformation"]:SetVehicleDeformation(NetToVeh(netid), deformation)
+            end
+        end
     end
 end)
 
